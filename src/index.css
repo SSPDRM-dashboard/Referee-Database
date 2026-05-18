@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1A365D;
+  --color-accent: #E53E3E;
+  --color-background: #F7FAFC;
+  --color-card: #FFFFFF;
+  --color-foreground: #2D3748;
+  --color-muted: #718096;
+  --color-border: #E2E8F0;
+  --color-success: #38A169;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

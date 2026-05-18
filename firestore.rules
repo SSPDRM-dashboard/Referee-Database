@@ -1,0 +1,91 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "anak2nsky@gmail.com" && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidUser(data) {
+      let allowedFields = ['uid', 'email', 'role', 'fullName', 'icNumber', 'tmMembershipId', 'gender', 'dateOfBirth', 'stateAssociation', 'premierClub', 'isActive', 'phoneNumber', 'kukkiwonDan', 'kyorugiRefereeLevel', 'poomsaeRefereeLevel', 'licenseExpiry', 'address', 'createdAt', 'seminarHistory', 'photoUrl', 'experienceHistory', 'refereeSerialNumber', 'lastAnnualFeeYear', 'annualFeeHistory', 'promotionHistory', 'banHistory'];
+      return hasOnlyAllowedFields(allowedFields) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() < 100 &&
+             data.role in ['admin', 'user'] &&
+             data.fullName is string && data.fullName.size() > 0 && data.fullName.size() < 100;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /login_mappings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      // Admin can read all users. User can read their own profile.
+      allow read: if isAdmin() || isOwner(userId);
+      
+      // Admin can create users directly. User must pass strict validation.
+      allow create: if isAdmin() || (
+        isAuthenticated() && 
+        isValidUser(request.resource.data) && 
+        isOwner(userId) && 
+        request.resource.data.role == 'user' && 
+        request.resource.data.uid == userId
+      );
+      
+      // Admin can update any user directly. User must pass strict validation and can't elevate privileges.
+      allow update: if isAdmin() || (
+        isOwner(userId) && 
+        isValidUser(request.resource.data) && 
+        request.resource.data.role == resource.data.role
+      );
+      
+      allow delete: if isAdmin();
+
+      match /experience/{docId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow write: if isAdmin();
+      }
+
+      match /annual_fees/{docId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow write: if isAdmin();
+      }
+
+      match /promotions/{docId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow write: if isAdmin();
+      }
+
+      match /bans/{docId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow write: if isAdmin();
+      }
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the TM Referee Registry, either an Admin or a Referee.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "Role of the user" },
+        "fullName": { "type": "string" },
+        "icNumber": { "type": "string" },
+        "tmMembershipId": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Male", "Female"] },
+        "dateOfBirth": { "type": "string", "format": "date" },
+        "stateAssociation": { "type": "string" },
+        "premierClub": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "phoneNumber": { "type": "string" },
+        "kukkiwonDan": { "type": "number" },
+        "refereeLevel": { "type": "string" },
+        "licenseExpiry": { "type": "string", "format": "date" },
+        "address": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "fullName"]
+    },
+    "Experience": {
+      "title": "Experience",
+      "description": "Referee experience records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "eventNo": { "type": "string" },
+        "classification": { "type": "string" },
+        "date": { "type": "string" },
+        "group": { "type": "string" },
+        "rcNo": { "type": "string" },
+        "seminar": { "type": "string" },
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "eventNo", "name"]
+    },
+    "AnnualFee": {
+      "title": "Annual Fee",
+      "description": "Annual fee payment records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "year": { "type": "number" },
+        "expDate": { "type": "string" },
+        "expAmount": { "type": "number" },
+        "receiptDate": { "type": "string" },
+        "paymentType": { "type": "string" },
+        "charge": { "type": "number" },
+        "receiptNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "year", "expAmount"]
+    },
+    "Promotion": {
+      "title": "Promotion",
+      "description": "Promotion history records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "inputDate": { "type": "string" },
+        "promotionDate": { "type": "string" },
+        "irClass": { "type": "string" },
+        "oldClass": { "type": "string" },
+        "remark": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "promotionDate", "irClass"]
+    },
+    "Ban": {
+      "title": "Ban",
+      "description": "Ban history records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "inputDate": { "type": "string" },
+        "fromDate": { "type": "string" },
+        "toDate": { "type": "string" },
+        "remark": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "fromDate", "toDate"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles and roles"
+    },
+    "/users/{userId}/experience/{docId}": {
+      "schema": { "$ref": "#/entities/Experience" },
+      "description": "Stores experience records for a user"
+    },
+    "/users/{userId}/annual_fees/{docId}": {
+      "schema": { "$ref": "#/entities/AnnualFee" },
+      "description": "Stores annual fee records for a user"
+    },
+    "/users/{userId}/promotions/{docId}": {
+      "schema": { "$ref": "#/entities/Promotion" },
+      "description": "Stores promotion records for a user"
+    },
+    "/users/{userId}/bans/{docId}": {
+      "schema": { "$ref": "#/entities/Ban" },
+      "description": "Stores ban records for a user"
+    }
+  }
+}

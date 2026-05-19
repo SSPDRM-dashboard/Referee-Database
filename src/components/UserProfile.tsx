@@ -8,6 +8,9 @@ import {
   LogOut,
   Save,
   Lock,
+  ClipboardCheck,
+  IdCard,
+  Download,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -30,6 +33,7 @@ import {
   signOut as signOutSecondary,
 } from "firebase/auth";
 import Cropper from "react-easy-crop";
+import html2canvas from "html2canvas";
 
 const getCroppedImg = async (
   imageSrc: string,
@@ -65,10 +69,25 @@ const getCroppedImg = async (
   return canvas.toDataURL("image/jpeg", 0.85);
 };
 
+const generateIdStr = (userData: any) => {
+  const parts = [userData?.tmMembershipId || "TMXXXX"];
+  
+  if (userData?.kyorugiRefereeLevel && userData.kyorugiRefereeLevel !== "NIL") {
+    parts.push(`K${userData.kyorugiRefereeLevel}`);
+  }
+  
+  if (userData?.poomsaeRefereeLevel && userData.poomsaeRefereeLevel !== "NIL") {
+    parts.push(`P${userData.poomsaeRefereeLevel}`);
+  }
+  
+  parts.push(userData?.refereeSerialNumber || "0001");
+  return parts.join("-");
+};
+
 const getRefereeLevelText = (level: string) => {
-  if (!level) return "REFEREE";
+  if (!level || level === "NIL") return "REFEREE";
   if (level.includes("IR")) return "INTERNATIONAL REFEREE";
-  if (level.includes("SR")) return "NATIONAL REFEREE";
+  if (level.includes("SR") || level.includes("NR") || level.toUpperCase().includes("NATIONAL")) return "NATIONAL REFEREE";
   if (level.includes("TR")) return "STATE REFEREE";
   return "REFEREE";
 };
@@ -87,34 +106,37 @@ const RefereeCard = ({
 
   return (
     <div
-      className="w-[340px] relative overflow-hidden border border-gray-200 flex flex-col font-sans mb-4 shrink-0"
+      id={`${title.toLowerCase()}-card`}
+      className="w-[340px] relative overflow-hidden flex flex-col font-sans mb-4 shrink-0"
       style={{
         backgroundColor: cardBgColor,
         boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        border: "1px solid #E5E7EB",
+        color: "#000000"
       }}
     >
       {/* Header */}
       <div
-        className="pt-4 pb-16 flex flex-col items-center justify-center text-center relative text-white"
-        style={{ backgroundColor: headerBgColor }}
+        className="pt-4 pb-16 flex flex-col items-center justify-center text-center relative"
+        style={{ backgroundColor: headerBgColor, color: "#FFFFFF" }}
       >
-        <div className="bg-white p-2 rounded-lg mb-4 shadow-sm">
+        <div className="flex items-center justify-center">
           <img
-            src="https://upload.wikimedia.org/wikipedia/en/9/91/Taekwondo_Malaysia_logo.png"
+            src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png"
             alt="TM"
-            className="h-[55px] object-contain"
-            onError={(e) => (e.currentTarget.style.display = "none")}
+            crossOrigin="anonymous"
+            className="max-h-[85px] max-w-full object-contain p-[4px]"
           />
         </div>
-        <h2 className="text-[22px] font-bold tracking-wide m-0 leading-tight uppercase">
+        <h2 className="text-[22px] font-bold tracking-wide m-0 leading-tight uppercase mt-2 mb-6" style={{ transform: "translateY(-10px)" }}>
           {title}
         </h2>
       </div>
 
       {/* Photo */}
       <div
-        className="w-[130px] h-[150px] bg-[#E2E8F0] -mt-[60px] mx-auto mb-5 flex items-center justify-center relative z-10 overflow-hidden"
-        style={{ borderRadius: "4px 4px 4px 4px" }}
+        className="w-[130px] h-[150px] -mt-[60px] mx-auto mb-2 flex items-center justify-center relative z-10 overflow-hidden"
+        style={{ backgroundColor: "#E2E8F0", borderRadius: "4px 4px 4px 4px" }}
       >
         {photo ? (
           <img src={photo} alt={name} className="w-full h-full object-cover" />
@@ -126,37 +148,39 @@ const RefereeCard = ({
       </div>
 
       {/* Details */}
-      <div className="px-4 pb-4 text-center text-[#212529]">
-        <p className="text-[15px] font-bold text-[#003366] uppercase tracking-[1px] m-0 mb-1">
-          {name || "N/A"}
-        </p>
-        <h1
-          className="text-[28px] font-bold uppercase tracking-tight m-0 leading-none mb-4 text-black"
-          style={{ transform: "scaleY(1.05)", letterSpacing: "-0.5px" }}
-        >
-          {level}
-        </h1>
+      <div className="px-4 pb-6 text-center flex flex-col" style={{ color: "#212529" }}>
+        <div className="flex flex-col">
+          <p className="text-[15px] font-bold uppercase tracking-[1px] m-0 mb-0.5" style={{ color: "#003366" }}>
+            {name || "N/A"}
+          </p>
+          <h1
+            className="text-[28px] font-bold uppercase tracking-tight m-0 leading-none mb-2 min-h-[56px] flex items-center justify-center"
+            style={{ color: "#000000", transform: "scaleY(1.05)", letterSpacing: "-0.5px" }}
+          >
+            {level}
+          </h1>
 
-        <p
-          className="font-mono font-bold text-[14px] tracking-[3px] text-[#8ea3b8] m-0 mb-3 px-2 whitespace-nowrap"
-          style={{ textShadow: "1px 1px 0 rgba(0,0,0,0.05)" }}
-        >
-          {idStr || "TMXXXX-KIR-PIR-0001"}
-        </p>
+          <p
+            className="font-mono font-bold text-[14px] tracking-[3px] m-0 mb-1 px-2 whitespace-nowrap"
+            style={{ color: "#8ea3b8", textShadow: "1px 1px 0 rgba(0,0,0,0.05)" }}
+          >
+            {idStr || "TMXXXX-KIR-PIR-0001"}
+          </p>
+        </div>
 
         {/* Footer Grid */}
-        <div className="grid grid-cols-[1fr_120px] border-t border-gray-200 mt-3">
-          <div className="flex flex-col items-center border-r border-gray-200 px-2 pt-3 pb-1 justify-center">
-            <span className="text-[11px] text-black mb-1">STATE/CLUB</span>
-            <span className="text-[13px] font-bold text-black uppercase text-center leading-tight truncate w-full">
+        <div className="grid grid-cols-[1fr_120px] pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
+          <div className="flex flex-col items-center px-2 pt-3 pb-3 justify-center" style={{ borderRight: "1px solid #E5E7EB" }}>
+            <span className="text-[11px] mb-1" style={{ color: "#000000" }}>STATE/CLUB</span>
+            <span className="text-[13px] font-bold uppercase text-center px-1" style={{ color: "#000000", wordBreak: "break-word" }}>
               {stateClub || "N/A"}
             </span>
           </div>
-          <div className="flex flex-col items-center px-2 pt-3 pb-1 justify-center">
-            <span className="text-[10px] text-[#8ea3b8] uppercase mb-1 whitespace-nowrap">
+          <div className="flex flex-col items-center px-2 pt-3 pb-3 justify-center">
+            <span className="text-[10px] uppercase mb-1 whitespace-nowrap" style={{ color: "#8ea3b8" }}>
               VALID THRU
             </span>
-            <span className="text-[20px] font-medium text-[#8ea3b8]">
+            <span className="text-[20px] font-medium" style={{ color: "#8ea3b8", lineHeight: "1" }}>
               {validThru || "YYYY"}
             </span>
           </div>
@@ -439,6 +463,21 @@ export default function UserProfile({
     }
   };
 
+  const downloadCard = async (elementId: string, filename: string) => {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    try {
+      const canvas = await html2canvas(element, { useCORS: true, allowTaint: false, scale: 2 });
+      const dataUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = filename;
+      a.click();
+    } catch (e) {
+      console.error("Error generating ID card image", e);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -486,6 +525,18 @@ export default function UserProfile({
           </button>
 
           <button
+            onClick={() => setActiveTab("id_card")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
+              activeTab === "id_card"
+                ? "bg-primary text-white"
+                : "text-muted hover:bg-gray-50"
+            }`}
+          >
+            <IdCard size={18} />
+            ID Card
+          </button>
+
+          <button
             onClick={() => setActiveTab("experience")}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
               activeTab === "experience"
@@ -494,7 +545,19 @@ export default function UserProfile({
             }`}
           >
             <FileText size={18} />
-            Experience
+            Kyorugi Experience
+          </button>
+
+          <button
+            onClick={() => setActiveTab("poomsae_experience")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
+              activeTab === "poomsae_experience"
+                ? "bg-primary text-white"
+                : "text-muted hover:bg-gray-50"
+            }`}
+          >
+            <FileText size={18} />
+            Poomsae Experience
           </button>
 
           <button
@@ -519,6 +582,18 @@ export default function UserProfile({
           >
             <Award size={18} />
             Promotion
+          </button>
+
+          <button
+            onClick={() => setActiveTab("evaluations")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
+              activeTab === "evaluations"
+                ? "bg-primary text-white"
+                : "text-muted hover:bg-gray-50"
+            }`}
+          >
+            <ClipboardCheck size={18} />
+            Evaluations
           </button>
 
           {isAdminView && (
@@ -589,20 +664,25 @@ export default function UserProfile({
           <header className="flex justify-between items-center pb-6 border-b-2 border-primary mb-6">
             <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">
               {activeTab === "personal" && "Personal Information"}
-              {activeTab === "experience" && "Referee Experience"}
+              {activeTab === "id_card" && "Digital ID Cards"}
+              {activeTab === "experience" && "Kyorugi Experience"}
+              {activeTab === "poomsae_experience" && "Poomsae Experience"}
               {activeTab === "annual_fee" && "Annual Fee History"}
               {activeTab === "promotion" && "Promotion History"}
+              {activeTab === "evaluations" && "Referee Evaluations"}
               {activeTab === "ban" && "Ban History"}
               {activeTab === "account" && "Account Settings"}
             </h1>
             <div className="flex gap-2">
-              {!isEditing ? (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="bg-primary text-white px-4 py-2 rounded font-bold text-sm hover:bg-primary/90 transition-colors"
-                >
-                  Edit Details
-                </button>
+              {(!isEditing) ? (
+                (isAdminView || ["personal", "experience", "poomsae_experience"].includes(activeTab)) && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-primary text-white px-4 py-2 rounded font-bold text-sm hover:bg-primary/90 transition-colors"
+                  >
+                    Edit Details
+                  </button>
+                )
               ) : (
                 <button
                   onClick={handleSave}
@@ -617,226 +697,9 @@ export default function UserProfile({
           </header>
 
           {activeTab === "personal" && (
-            <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8 h-full">
-              {/* Left Column */}
-              <div className="flex flex-col gap-4">
-                {/* Digital ID Cards */}
-                {isEditing ? (
-                  <div className="w-[340px] h-[480px] bg-card rounded-2xl relative overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.1)] border border-border flex flex-col">
-                    <div className="pt-6 pb-14 bg-[#F8FAFC] flex flex-col items-center justify-center text-center relative border-b-[3px] border-primary">
-                      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_top,black_10%,transparent_80%)]"></div>
+            <div className="flex flex-col gap-8 h-full">
 
-                      {/* TM Logo Representation */}
-                      <div className="relative z-10 flex flex-col items-center justify-center mb-1">
-                        <img
-                          src="https://upload.wikimedia.org/wikipedia/en/9/91/Taekwondo_Malaysia_logo.png"
-                          alt="Taekwondo Malaysia Logo"
-                          className="h-[60px] object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            e.currentTarget.nextElementSibling?.classList.remove(
-                              "hidden",
-                            );
-                          }}
-                        />
-                        <div
-                          className="hidden font-black text-5xl italic tracking-tighter"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #F97316 0%, #F97316 35%, #000 35%, #000 65%, #F97316 65%, #F97316 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                          }}
-                        >
-                          TM
-                        </div>
-                      </div>
-
-                      <h3 className="m-0 text-[13px] tracking-widest text-[#1a202c] font-black uppercase z-10">
-                        TAEKWONDO MALAYSIA
-                      </h3>
-                    </div>
-
-                    <div className="w-[160px] h-[160px] bg-[#E2E8F0] -mt-[50px] mx-auto mb-4 border-[6px] border-white rounded-lg flex items-center justify-center relative z-10 overflow-hidden group">
-                      {editedData.photoUrl || userData.photoUrl ? (
-                        <img
-                          src={editedData.photoUrl || userData.photoUrl}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <svg
-                          width="80"
-                          height="80"
-                          viewBox="0 0 24 24"
-                          fill="#CBD5E0"
-                        >
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                      )}
-                      <label className="absolute inset-0 bg-black/50 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                        <span className="text-[12px] font-bold">
-                          Upload Photo
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handlePhotoUpload}
-                        />
-                      </label>
-                    </div>
-
-                    <div className="px-6 pb-6 text-center">
-                      <input
-                        type="text"
-                        value={editedData.fullName}
-                        onChange={(e) =>
-                          handleInputChange("fullName", e.target.value)
-                        }
-                        className="text-[18px] font-bold m-0 mb-1 w-full text-center border-b border-primary focus:outline-none"
-                        placeholder="Full Name"
-                      />
-
-                      <div className="flex flex-col items-center mb-5 gap-2 w-full px-4 mt-2">
-                        <input
-                          type="text"
-                          value={editedData.tmMembershipId || ""}
-                          onChange={(e) =>
-                            handleInputChange("tmMembershipId", e.target.value)
-                          }
-                          disabled={!isAdminView}
-                          placeholder="TMXXXX"
-                          className="font-mono text-muted text-[14px] w-full text-center border-b border-primary focus:outline-none disabled:bg-transparent"
-                        />
-                        <div className="flex gap-2 w-full justify-center text-[12px]">
-                          <div className="flex items-center gap-1">
-                            <span className="font-bold">K</span>
-                            <select
-                              value={editedData.kyorugiRefereeLevel || "IR"}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "kyorugiRefereeLevel",
-                                  e.target.value,
-                                )
-                              }
-                              disabled={!isAdminView}
-                              className="font-mono text-muted border-b border-primary focus:outline-none bg-transparent disabled:opacity-100 appearance-none"
-                            >
-                              <option value="TR">TR</option>
-                              <option value="SR">SR</option>
-                              <option value="IR3">IR3</option>
-                              <option value="IR2">IR2</option>
-                              <option value="IR1">IR1</option>
-                              <option value="IR">IR</option>
-                            </select>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-bold">P</span>
-                            <select
-                              value={editedData.poomsaeRefereeLevel || "IR"}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "poomsaeRefereeLevel",
-                                  e.target.value,
-                                )
-                              }
-                              disabled={!isAdminView}
-                              className="font-mono text-muted border-b border-primary focus:outline-none bg-transparent disabled:opacity-100 appearance-none"
-                            >
-                              <option value="TR">TR</option>
-                              <option value="SR">SR</option>
-                              <option value="IR3">IR3</option>
-                              <option value="IR2">IR2</option>
-                              <option value="IR1">IR1</option>
-                              <option value="IR">IR</option>
-                            </select>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-bold">-</span>
-                            <input
-                              type="text"
-                              value={editedData.refereeSerialNumber || ""}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  "refereeSerialNumber",
-                                  e.target.value,
-                                )
-                              }
-                              disabled={!isAdminView}
-                              placeholder="0001"
-                              className="font-mono text-muted w-12 text-center border-b border-primary focus:outline-none disabled:bg-transparent"
-                            />
-                          </div>
-                        </div>
-                        <div className="font-mono text-muted text-[12px] w-full text-center mt-3 pt-3 border-t border-gray-100">
-                          VALID THRU: {(() => {
-                            const fees = editedData.annualFeeHistory || [];
-                            if (!fees.length) return userData.lastAnnualFeeYear || "YYYY";
-                            const years = fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y));
-                            return years.length ? Math.max(...years).toString() : (userData.lastAnnualFeeYear || "YYYY");
-                          })()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {(userData.kyorugiRefereeLevel ||
-                      (!userData.kyorugiRefereeLevel &&
-                        !userData.poomsaeRefereeLevel)) && (
-                      <RefereeCard
-                        title="KYORUGI"
-                        level={getRefereeLevelText(
-                          userData.kyorugiRefereeLevel || "IR",
-                        )}
-                        photo={userData.photoUrl}
-                        name={userData.fullName}
-                        idStr={
-                          userData.tmMembershipId
-                            ? `${userData.tmMembershipId}-K${userData.kyorugiRefereeLevel || "IR"}-P${userData.poomsaeRefereeLevel || "IR"}-${userData.refereeSerialNumber || "0001"}`
-                            : "TMXXXX-KIR-PIR-0001"
-                        }
-                        stateClub={
-                          userData.premierClub || userData.stateAssociation
-                        }
-                        validThru={(() => {
-                          const fees = userData.annualFeeHistory || [];
-                          if (!fees.length) return userData.lastAnnualFeeYear;
-                          const years = fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y));
-                          return years.length ? Math.max(...years).toString() : userData.lastAnnualFeeYear;
-                        })()}
-                      />
-                    )}
-                    {userData.poomsaeRefereeLevel && (
-                      <RefereeCard
-                        title="POOMSAE"
-                        level={getRefereeLevelText(
-                          userData.poomsaeRefereeLevel || "IR",
-                        )}
-                        photo={userData.photoUrl}
-                        name={userData.fullName}
-                        idStr={
-                          userData.tmMembershipId
-                            ? `${userData.tmMembershipId}-K${userData.kyorugiRefereeLevel || "IR"}-P${userData.poomsaeRefereeLevel || "IR"}-${userData.refereeSerialNumber || "0001"}`
-                            : "TMXXXX-KIR-PIR-0001"
-                        }
-                        stateClub={
-                          userData.premierClub || userData.stateAssociation
-                        }
-                        validThru={(() => {
-                          const fees = userData.annualFeeHistory || [];
-                          if (!fees.length) return userData.lastAnnualFeeYear;
-                          const years = fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y));
-                          return years.length ? Math.max(...years).toString() : userData.lastAnnualFeeYear;
-                        })()}
-                      />
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Right Column */}
+              {/* Main Content */}
               <div className="grid grid-rows-[auto_1fr_auto] gap-5">
                 {/* Identity & Contact */}
                 <div className="bg-white border border-border rounded-lg p-5">
@@ -865,26 +728,63 @@ export default function UserProfile({
                       </span>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                    <div className="flex flex-col">
-                      <label className="block text-[11px] text-muted mb-1">
-                        IC Number
+                  <div className="flex flex-col md:flex-row-reverse gap-8">
+                    {/* Photo Section */}
+                    <div className="flex flex-col items-center shrink-0">
+                      <label className="block text-[11px] text-muted mb-2 tracking-widest uppercase font-bold">
+                        Profile Photo
                       </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editedData.icNumber || ""}
-                          onChange={(e) =>
-                            handleInputChange("icNumber", e.target.value)
-                          }
-                          className="font-semibold text-[14px] border-b border-primary focus:outline-none"
-                        />
-                      ) : (
-                        <p className="m-0 font-semibold text-[14px]">
-                          {userData.icNumber || "N/A"}
-                        </p>
-                      )}
+                      <div className="relative group w-28 h-32 rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center shadow-sm">
+                        {(isEditing ? editedData.photoUrl : userData.photoUrl) ? (
+                          <img
+                            src={isEditing ? editedData.photoUrl : userData.photoUrl}
+                            className="w-full h-full object-cover"
+                            alt="Profile"
+                          />
+                        ) : (
+                          <svg
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="#CBD5E0"
+                          >
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                          </svg>
+                        )}
+                        {isEditing && (
+                          <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                            <span className="text-white text-[10px] font-bold uppercase">Change</span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handlePhotoUpload}
+                            />
+                          </label>
+                        )}
+                      </div>
                     </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 flex-1">
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
+                          IC Number
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editedData.icNumber || ""}
+                            onChange={(e) =>
+                              handleInputChange("icNumber", e.target.value)
+                            }
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {userData.icNumber || "N/A"}
+                          </p>
+                        )}
+                      </div>
                     <div className="flex flex-col">
                       <label className="block text-[11px] text-muted mb-1">
                         Date of Birth
@@ -985,8 +885,9 @@ export default function UserProfile({
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Seminar & Qualification History */}
+              {/* Seminar & Qualification History */}
                 <div className="bg-white border border-border rounded-lg p-5">
                   <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                     <span>Seminar & Qualification History</span>
@@ -1168,15 +1069,243 @@ export default function UserProfile({
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-                  <div className="bg-[#FFF5F5] border border-[#FED7D7] text-[#C53030] p-3 rounded text-[13px] flex items-center gap-2.5 mt-3">
-                    <div className="w-2 h-2 bg-current rounded-full shrink-0"></div>
-                    <div>
-                      <strong>License Expiry Warning:</strong> This referee's
-                      annual TM license expires soon.
+          {activeTab === "id_card" && (
+            <div className={`grid grid-cols-1 ${isEditing ? "lg:grid-cols-[340px_1fr]" : ""} gap-8 h-full bg-white border border-border rounded-lg p-10 mt-1`}>
+              {/* Left Column (Editor) */}
+              {isEditing && (
+                <div className="flex flex-col gap-4">
+                  {/* Digital ID Cards Form UI */}
+                  <div className="w-[340px] h-[480px] bg-card rounded-2xl relative overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.1)] border border-border flex flex-col">
+                    <div className="pt-6 pb-14 bg-[#F8FAFC] flex flex-col items-center justify-center text-center relative border-b-[3px] border-primary">
+                      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_top,black_10%,transparent_80%)]"></div>
+
+                      {/* TM Logo Representation */}
+                      <div className="relative z-10 flex flex-col items-center justify-center mb-1 h-[85px] w-full px-4">
+                        <img
+                          src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png"
+                          alt="Taekwondo Malaysia Logo"
+                          className="max-h-[85px] max-w-full object-contain p-[4px]"
+                        />
+                        <div
+                          className="hidden font-black text-5xl italic tracking-tighter"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #F97316 0%, #F97316 35%, #000 35%, #000 65%, #F97316 65%, #F97316 100%)",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                          }}
+                        >
+                          TM
+                        </div>
+                      </div>
+
+                      <h3 className="m-0 text-[13px] tracking-widest text-[#1a202c] font-black uppercase z-10">
+                        TAEKWONDO MALAYSIA
+                      </h3>
+                    </div>
+
+                    <div className="w-[160px] h-[160px] bg-[#E2E8F0] -mt-[50px] mx-auto mb-4 border-[6px] border-white rounded-lg flex items-center justify-center relative z-10 overflow-hidden group">
+                      {editedData.photoUrl || userData.photoUrl ? (
+                        <img
+                          src={editedData.photoUrl || userData.photoUrl}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg
+                          width="80"
+                          height="80"
+                          viewBox="0 0 24 24"
+                          fill="#CBD5E0"
+                        >
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                      )}
+                      <label className="absolute inset-0 bg-black/50 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                        <span className="text-[12px] font-bold">
+                          Upload Photo
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePhotoUpload}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="px-6 pb-6 text-center">
+                      <input
+                        type="text"
+                        value={editedData.fullName}
+                        onChange={(e) =>
+                          handleInputChange("fullName", e.target.value)
+                        }
+                        disabled={!isAdminView}
+                        className="text-[18px] font-bold m-0 mb-1 w-full text-center border-b border-primary focus:outline-none disabled:bg-transparent"
+                        placeholder="Full Name"
+                      />
+
+                      <div className="flex flex-col items-center mb-5 gap-2 w-full px-4 mt-2">
+                        <input
+                          type="text"
+                          value={editedData.tmMembershipId || ""}
+                          onChange={(e) =>
+                            handleInputChange("tmMembershipId", e.target.value)
+                          }
+                          disabled={!isAdminView}
+                          placeholder="TMXXXX"
+                          className="font-mono text-muted text-[14px] w-full text-center border-b border-primary focus:outline-none disabled:bg-transparent"
+                        />
+                        <div className="flex gap-2 w-full justify-center text-[12px]">
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold">K</span>
+                            <select
+                              value={editedData.kyorugiRefereeLevel !== undefined ? editedData.kyorugiRefereeLevel : "IR"}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "kyorugiRefereeLevel",
+                                  e.target.value,
+                                )
+                              }
+                              disabled={!isAdminView}
+                              className="font-mono text-muted border-b border-primary focus:outline-none bg-transparent disabled:opacity-100 appearance-none"
+                            >
+                              <option value="NIL">NIL</option>
+                              <option value="TR">TR</option>
+                              <option value="SR">SR</option>
+                              <option value="NR">NR</option>
+                              <option value="IR3">IR3</option>
+                              <option value="IR2">IR2</option>
+                              <option value="IR1">IR1</option>
+                              <option value="IR">IR</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold">P</span>
+                            <select
+                              value={editedData.poomsaeRefereeLevel !== undefined ? editedData.poomsaeRefereeLevel : "IR"}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "poomsaeRefereeLevel",
+                                  e.target.value,
+                                )
+                              }
+                              disabled={!isAdminView}
+                              className="font-mono text-muted border-b border-primary focus:outline-none bg-transparent disabled:opacity-100 appearance-none"
+                            >
+                              <option value="NIL">NIL</option>
+                              <option value="TR">TR</option>
+                              <option value="SR">SR</option>
+                              <option value="NR">NR</option>
+                              <option value="IR3">IR3</option>
+                              <option value="IR2">IR2</option>
+                              <option value="IR1">IR1</option>
+                              <option value="IR">IR</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-bold">-</span>
+                            <input
+                              type="text"
+                              value={editedData.refereeSerialNumber || ""}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  "refereeSerialNumber",
+                                  e.target.value,
+                                )
+                              }
+                              disabled={!isAdminView}
+                              placeholder="0001"
+                              className="font-mono text-muted w-12 text-center border-b border-primary focus:outline-none disabled:bg-transparent"
+                            />
+                          </div>
+                        </div>
+                        <div className="font-mono text-muted text-[12px] w-full text-center mt-3 pt-3 border-t border-gray-100">
+                          VALID THRU: {(() => {
+                            const fees = editedData.annualFeeHistory || [];
+                            if (!fees.length) return userData.lastAnnualFeeYear || "YYYY";
+                            const years = fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y));
+                            return years.length ? Math.max(...years).toString() : (userData.lastAnnualFeeYear || "YYYY");
+                          })()}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Right Column (Cards) */}
+              <div className="flex flex-wrap items-stretch justify-center gap-8">
+                {((!userData.kyorugiRefereeLevel || userData.kyorugiRefereeLevel === "NIL") && (!userData.poomsaeRefereeLevel || userData.poomsaeRefereeLevel === "NIL")) ? (
+                  <div className="w-full text-center py-10 text-muted">
+                    No active referee level found.
+                  </div>
+                ) : (
+                  <>
+                    {userData.kyorugiRefereeLevel && userData.kyorugiRefereeLevel !== "NIL" && (
+                      <div className="flex flex-col items-center h-full">
+                      <RefereeCard
+                        title="KYORUGI"
+                        level={getRefereeLevelText(
+                          userData.kyorugiRefereeLevel || "IR",
+                        )}
+                        photo={userData.photoUrl}
+                        name={userData.fullName}
+                        idStr={generateIdStr(userData)}
+                        stateClub={
+                          userData.premierClub || userData.stateAssociation
+                        }
+                        validThru={(() => {
+                          const fees = userData.annualFeeHistory || [];
+                          if (!fees.length) return userData.lastAnnualFeeYear;
+                          const years = fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y));
+                          return years.length ? Math.max(...years).toString() : userData.lastAnnualFeeYear;
+                        })()}
+                      />
+                      <button
+                        onClick={() => downloadCard("kyorugi-card", "kyorugi_id_card.png")}
+                        className="mt-auto flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-sm"
+                      >
+                        <Download size={16} /> Download Kyorugi Card
+                      </button>
+                    </div>
+                  )}
+                  {userData.poomsaeRefereeLevel && userData.poomsaeRefereeLevel !== "NIL" && (
+                    <div className="flex flex-col items-center h-full">
+                      <RefereeCard
+                        title="POOMSAE"
+                        level={getRefereeLevelText(
+                          userData.poomsaeRefereeLevel || "IR",
+                        )}
+                        photo={userData.photoUrl}
+                        name={userData.fullName}
+                        idStr={generateIdStr(userData)}
+                        stateClub={
+                          userData.premierClub || userData.stateAssociation
+                        }
+                        validThru={(() => {
+                          const fees = userData.annualFeeHistory || [];
+                          if (!fees.length) return userData.lastAnnualFeeYear;
+                          const years = fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y));
+                          return years.length ? Math.max(...years).toString() : userData.lastAnnualFeeYear;
+                        })()}
+                      />
+                      <button
+                        onClick={() => downloadCard("poomsae-card", "poomsae_id_card.png")}
+                        className="mt-auto flex items-center gap-2 bg-[#b50000] text-white px-5 py-2.5 rounded-lg font-bold hover:bg-[#b50000]/90 transition-colors shadow-sm"
+                      >
+                        <Download size={16} /> Download Poomsae Card
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
               </div>
             </div>
           )}
@@ -1184,7 +1313,7 @@ export default function UserProfile({
           {activeTab === "experience" && (
             <div className="bg-white border border-border rounded-lg p-5">
               <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
-                <span>Referee Experience</span>
+                <span>Kyorugi Experience</span>
                 {isEditing && (
                   <button
                     onClick={() => {
@@ -1340,11 +1469,170 @@ export default function UserProfile({
             </div>
           )}
 
+          {activeTab === "poomsae_experience" && (
+            <div className="bg-white border border-border rounded-lg p-5">
+              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+                <span>Poomsae Experience</span>
+                {isEditing && (
+                  <button
+                    onClick={() => {
+                      const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                      newExp.push({
+                        id: Date.now().toString(),
+                        year: "",
+                        eventName: "",
+                        location: "",
+                        role: "",
+                      });
+                      handleInputChange("poomsaeExperienceHistory", newExp);
+                    }}
+                    className="text-primary text-[11px] font-bold"
+                  >
+                    + ADD EXPERIENCE
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse mt-2">
+                  <thead>
+                    <tr>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                        Year
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                        Event Name
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                        Location
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                        Role / Responsibility
+                      </th>
+                      {isEditing && (
+                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(isEditing
+                      ? editedData.poomsaeExperienceHistory || []
+                      : userData.poomsaeExperienceHistory || []
+                    ).map((item: any, index: number) => (
+                      <tr key={item.id || index}>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing ? (
+                            <input
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.year}
+                              onChange={(e) => {
+                                const newExp = [
+                                  ...editedData.poomsaeExperienceHistory,
+                                ];
+                                newExp[index].year = e.target.value;
+                                handleInputChange("poomsaeExperienceHistory", newExp);
+                              }}
+                              placeholder="YYYY"
+                            />
+                          ) : (
+                            item.year
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing ? (
+                            <input
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.eventName}
+                              onChange={(e) => {
+                                const newExp = [
+                                  ...editedData.poomsaeExperienceHistory,
+                                ];
+                                newExp[index].eventName = e.target.value;
+                                handleInputChange("poomsaeExperienceHistory", newExp);
+                              }}
+                              placeholder="Tournament/Event"
+                            />
+                          ) : (
+                            item.eventName
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing ? (
+                            <input
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.location}
+                              onChange={(e) => {
+                                const newExp = [
+                                  ...editedData.poomsaeExperienceHistory,
+                                ];
+                                newExp[index].location = e.target.value;
+                                handleInputChange("poomsaeExperienceHistory", newExp);
+                              }}
+                              placeholder="City/State"
+                            />
+                          ) : (
+                            item.location
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing ? (
+                            <input
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.role}
+                              onChange={(e) => {
+                                const newExp = [
+                                  ...editedData.poomsaeExperienceHistory,
+                                ];
+                                newExp[index].role = e.target.value;
+                                handleInputChange("poomsaeExperienceHistory", newExp);
+                              }}
+                              placeholder="Role"
+                            />
+                          ) : (
+                            item.role
+                          )}
+                        </td>
+                        {isEditing && (
+                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+                            <button
+                              onClick={() => {
+                                const newExp =
+                                  editedData.poomsaeExperienceHistory.filter(
+                                    (_: any, i: number) => i !== index,
+                                  );
+                                handleInputChange("poomsaeExperienceHistory", newExp);
+                              }}
+                              className="text-red-500 font-bold"
+                            >
+                              X
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                    {(!userData.poomsaeExperienceHistory ||
+                      userData.poomsaeExperienceHistory.length === 0) &&
+                      !isEditing && (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+                          >
+                            No experience uploaded yet.
+                          </td>
+                        </tr>
+                      )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {activeTab === "annual_fee" && (
             <div className="bg-white border border-border rounded-lg p-5">
               <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                 <span>Annual Fee History</span>
-                {isEditing && (
+                {isEditing && isAdminView && (
                   <button
                     onClick={() => {
                       const newFees = [...(editedData.annualFeeHistory || [])];
@@ -1380,7 +1668,7 @@ export default function UserProfile({
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Receipt No.
                       </th>
-                      {isEditing && (
+                      {isEditing && isAdminView && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
                       )}
                     </tr>
@@ -1392,7 +1680,7 @@ export default function UserProfile({
                     ).map((item: any, index: number) => (
                       <tr key={item.id || index}>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               value={item.year}
@@ -1410,7 +1698,7 @@ export default function UserProfile({
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               type="date"
@@ -1428,7 +1716,7 @@ export default function UserProfile({
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               value={item.amount}
@@ -1446,7 +1734,7 @@ export default function UserProfile({
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               value={item.receiptNo}
@@ -1463,7 +1751,7 @@ export default function UserProfile({
                             item.receiptNo
                           )}
                         </td>
-                        {isEditing && (
+                        {isEditing && isAdminView && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
                               onClick={() => {
@@ -1503,7 +1791,7 @@ export default function UserProfile({
             <div className="bg-white border border-border rounded-lg p-5">
               <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                 <span>Promotion History</span>
-                {isEditing && (
+                {isEditing && isAdminView && (
                   <button
                     onClick={() => {
                       const newPromotions = [
@@ -1541,7 +1829,7 @@ export default function UserProfile({
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Remarks
                       </th>
-                      {isEditing && (
+                      {isEditing && isAdminView && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
                       )}
                     </tr>
@@ -1553,7 +1841,7 @@ export default function UserProfile({
                     ).map((item: any, index: number) => (
                       <tr key={item.id || index}>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               type="date"
@@ -1574,7 +1862,7 @@ export default function UserProfile({
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <select
                               className="w-full border-b border-primary focus:outline-none bg-transparent"
                               value={item.category}
@@ -1598,7 +1886,7 @@ export default function UserProfile({
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               value={item.levelAchieved}
@@ -1620,7 +1908,7 @@ export default function UserProfile({
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing ? (
+                          {isEditing && isAdminView ? (
                             <input
                               className="w-full border-b border-primary focus:outline-none"
                               value={item.remarks}
@@ -1640,7 +1928,7 @@ export default function UserProfile({
                             item.remarks
                           )}
                         </td>
-                        {isEditing && (
+                        {isEditing && isAdminView && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
                               onClick={() => {
@@ -1670,6 +1958,231 @@ export default function UserProfile({
                             className="p-4 text-center text-muted text-[13px] border-b border-border"
                           >
                             No promotion records found.
+                          </td>
+                        </tr>
+                      )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "evaluations" && (
+            <div className="bg-white border border-border rounded-lg p-5">
+              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+                <span>Referee Evaluations</span>
+                {isEditing && isAdminView && (
+                  <button
+                    onClick={() => {
+                      const newEvals = [...(editedData.evaluations || [])];
+                      newEvals.push({
+                        id: Date.now().toString(),
+                        date: "",
+                        venue: "",
+                        evaluator: "",
+                        totalScore: "",
+                        rating: "",
+                        recommendation: "",
+                        comments: ""
+                      });
+                      handleInputChange("evaluations", newEvals);
+                    }}
+                    className="text-primary text-[11px] font-bold"
+                  >
+                    + ADD EVALUATION
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse mt-2">
+                  <thead>
+                    <tr>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border min-w-[120px]">
+                        Date
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border min-w-[150px]">
+                        Venue / Tournament
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border min-w-[120px]">
+                        Evaluator
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-[80px]">
+                        Score
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border min-w-[100px]">
+                        Rating
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border min-w-[180px]">
+                        Recommendation & Comments
+                      </th>
+                      {isEditing && isAdminView && (
+                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-[40px]"></th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(isEditing
+                      ? editedData.evaluations || []
+                      : userData.evaluations || []
+                    ).map((item: any, index: number) => (
+                      <tr key={item.id || index} className="align-top">
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing && isAdminView ? (
+                            <input
+                              type="date"
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.date}
+                              onChange={(e) => {
+                                const newEvals = [...editedData.evaluations];
+                                newEvals[index].date = e.target.value;
+                                handleInputChange("evaluations", newEvals);
+                              }}
+                            />
+                          ) : (
+                            item.date
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing && isAdminView ? (
+                            <input
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.venue}
+                              onChange={(e) => {
+                                const newEvals = [...editedData.evaluations];
+                                newEvals[index].venue = e.target.value;
+                                handleInputChange("evaluations", newEvals);
+                              }}
+                              placeholder="Venue"
+                            />
+                          ) : (
+                            item.venue
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing && isAdminView ? (
+                            <input
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.evaluator}
+                              onChange={(e) => {
+                                const newEvals = [...editedData.evaluations];
+                                newEvals[index].evaluator = e.target.value;
+                                handleInputChange("evaluations", newEvals);
+                              }}
+                              placeholder="Evaluator Name"
+                            />
+                          ) : (
+                            item.evaluator
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing && isAdminView ? (
+                            <input
+                              type="number"
+                              className="w-full border-b border-primary focus:outline-none"
+                              value={item.totalScore}
+                              onChange={(e) => {
+                                const newEvals = [...editedData.evaluations];
+                                newEvals[index].totalScore = e.target.value;
+                                handleInputChange("evaluations", newEvals);
+                              }}
+                              placeholder="/ 50"
+                            />
+                          ) : (
+                            <span className="font-bold">{item.totalScore ? `${item.totalScore}/50` : ''}</span>
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing && isAdminView ? (
+                            <select
+                              className="w-full border-b border-primary focus:outline-none bg-white text-[13px]"
+                              value={item.rating}
+                              onChange={(e) => {
+                                const newEvals = [...editedData.evaluations];
+                                newEvals[index].rating = e.target.value;
+                                handleInputChange("evaluations", newEvals);
+                              }}
+                            >
+                              <option value="">Select Rating...</option>
+                              <option value="Excellent (45-50)">Excellent (45-50)</option>
+                              <option value="Good (35-44)">Good (35-44)</option>
+                              <option value="Satisfactory (25-34)">Satisfactory (25-34)</option>
+                              <option value="Need Improvement (<25)">Need Improvement (&lt;25)</option>
+                            </select>
+                          ) : (
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${item.rating?.includes('Excellent') ? 'bg-green-100 text-green-800' : item.rating?.includes('Good') ? 'bg-blue-100 text-blue-800' : item.rating?.includes('Satisfactory') ? 'bg-yellow-100 text-yellow-800' : item.rating ? 'bg-red-100 text-red-800' : ''}`}>
+                              {item.rating?.split(' (')[0]}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing && isAdminView ? (
+                            <div className="flex flex-col gap-2">
+                              <select
+                                className="w-full border-b border-primary focus:outline-none bg-white text-[13px]"
+                                value={item.recommendation}
+                                onChange={(e) => {
+                                  const newEvals = [...editedData.evaluations];
+                                  newEvals[index].recommendation = e.target.value;
+                                  handleInputChange("evaluations", newEvals);
+                                }}
+                              >
+                                <option value="">Recommendation...</option>
+                                <option value="Higher Level">Recommended for Higher Level</option>
+                                <option value="Maintain">Maintain Current Level</option>
+                                <option value="Further Training">Further Training Required</option>
+                                <option value="Sanction">Not Recommended / Sanction</option>
+                              </select>
+                              <textarea
+                                className="w-full border border-border p-1 rounded text-[13px] min-h-[60px]"
+                                value={item.comments}
+                                onChange={(e) => {
+                                  const newEvals = [...editedData.evaluations];
+                                  newEvals[index].comments = e.target.value;
+                                  handleInputChange("evaluations", newEvals);
+                                }}
+                                placeholder="Comments"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              {item.recommendation && (
+                                <div className="font-semibold text-[11px] uppercase text-primary">
+                                  {item.recommendation}
+                                </div>
+                              )}
+                              {item.comments && (
+                                <div className="text-muted italic">"{item.comments}"</div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        {isEditing && isAdminView && (
+                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right align-middle">
+                            <button
+                              onClick={() => {
+                                const newEvals = editedData.evaluations.filter(
+                                  (_: any, i: number) => i !== index,
+                                );
+                                handleInputChange("evaluations", newEvals);
+                              }}
+                              className="text-red-500 font-bold"
+                            >
+                              X
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                    {(!userData.evaluations ||
+                      userData.evaluations.length === 0) &&
+                      !isEditing && (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+                          >
+                            No evaluations recorded.
                           </td>
                         </tr>
                       )}
@@ -1917,9 +2430,11 @@ export default function UserProfile({
           )}
 
           {activeTab !== "personal" &&
+            activeTab !== "id_card" &&
             activeTab !== "experience" &&
             activeTab !== "annual_fee" &&
             activeTab !== "promotion" &&
+            activeTab !== "evaluations" &&
             activeTab !== "ban" &&
             activeTab !== "account" && (
               <div className="bg-white border border-border rounded-lg p-12 text-center text-muted flex flex-col items-center justify-center min-h-[400px]">

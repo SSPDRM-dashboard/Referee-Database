@@ -7,6 +7,7 @@ import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } 
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -135,6 +136,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const filteredUsers = users.filter((user) => {
+    const searchLower = searchQuery.toLowerCase();
+    const fullName = (user.fullName || '').toLowerCase();
+    const icNumber = (user.icNumber || '').toLowerCase();
+    const tmId = (user.tmMembershipId || '').toLowerCase();
+
+    return (
+      fullName.includes(searchLower) ||
+      icNumber.includes(searchLower) ||
+      tmId.includes(searchLower)
+    );
+  });
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="w-[260px] bg-white border-r border-border flex flex-col shrink-0">
@@ -160,12 +174,31 @@ export default function AdminDashboard() {
 
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
-          <header className="flex justify-between items-center pb-6 border-b-2 border-primary mb-6">
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b-2 border-primary mb-6 gap-4">
             <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">Referee Directory</h1>
-            <button onClick={handleOpenModal} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center gap-2 hover:bg-primary/90">
-              <UserPlus size={16} />
-              Add New User
-            </button>
+            <div className="flex flex-1 w-full md:w-auto md:max-w-md gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search by name, ID or IC..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm"
+                />
+                {searchQuery && (
+                   <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary"
+                   >
+                     <X size={14} />
+                   </button>
+                )}
+              </div>
+              <button onClick={handleOpenModal} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center shrink-0 gap-2 hover:bg-primary/90">
+                <UserPlus size={16} />
+                Add User
+              </button>
+            </div>
           </header>
 
           {loading ? (
@@ -184,7 +217,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(user => (
+                  {filteredUsers.map(user => (
                     <tr key={user.id} className="border-b border-border hover:bg-gray-50">
                       <td className="p-4 font-semibold text-sm">{user.fullName || 'N/A'}</td>
                       <td className="p-4 text-sm font-mono text-muted whitespace-nowrap">
@@ -214,9 +247,11 @@ export default function AdminDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {users.length === 0 && (
+                  {filteredUsers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-muted">No users found.</td>
+                      <td colSpan={6} className="p-8 text-center text-muted">
+                        {users.length === 0 ? "No users found." : "No results match your search."}
+                      </td>
                     </tr>
                   )}
                 </tbody>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, LogOut, X, Trash2 } from 'lucide-react';
+import { UserPlus, Users, LogOut, X, Trash2, Plus } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
 
 export default function AdminDashboard() {
@@ -20,6 +20,17 @@ export default function AdminDashboard() {
   const [newRole, setNewRole] = useState('user');
   const [addError, setAddError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  
+  // Quick Add Experience State
+  const [isExpModalOpen, setIsExpModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [expType, setExpType] = useState('kyorugi'); // 'kyorugi' or 'poomsae'
+  const [expYear, setExpYear] = useState('');
+  const [expEvent, setExpEvent] = useState('');
+  const [expLocation, setExpLocation] = useState('');
+  const [expRole, setExpRole] = useState('');
+  const [isExpSaving, setIsExpSaving] = useState(false);
+  const [expError, setExpError] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -149,6 +160,48 @@ export default function AdminDashboard() {
     );
   });
 
+  const handleOpenExpModal = (user: any) => {
+    setSelectedUser(user);
+    setExpType('kyorugi');
+    setExpYear(new Date().getFullYear().toString());
+    setExpEvent('');
+    setExpLocation('');
+    setExpRole('');
+    setExpError('');
+    setIsExpModalOpen(true);
+  };
+
+  const submitAddExperience = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    setExpError('');
+    setIsExpSaving(true);
+
+    try {
+      const fieldName = expType === 'kyorugi' ? 'experienceHistory' : 'poomsaeExperienceHistory';
+      const newEntry = {
+        id: Date.now().toString(),
+        year: expYear,
+        eventName: expEvent,
+        location: expLocation,
+        role: expRole
+      };
+
+      await updateDoc(doc(db, 'users', selectedUser.id), {
+        [fieldName]: arrayUnion(newEntry)
+      });
+
+      // Update local state is optional but good for immediate feedback if we showed it
+      alert('Experience successfully added to ' + selectedUser.fullName);
+      setIsExpModalOpen(false);
+    } catch (error: any) {
+      console.error("Error adding experience:", error);
+      setExpError("Failed to add experience: " + error.message);
+    } finally {
+      setIsExpSaving(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="w-[260px] bg-white border-r border-border flex flex-col shrink-0">
@@ -240,6 +293,13 @@ export default function AdminDashboard() {
                           className="text-primary text-sm font-bold hover:underline"
                         >
                           View Profile
+                        </button>
+                        <button 
+                          onClick={() => handleOpenExpModal(user)}
+                          className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
+                        >
+                          <Plus size={14} />
+                          Add Exp
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id, user.fullName || 'this user')}
@@ -358,6 +418,119 @@ export default function AdminDashboard() {
                   className="bg-primary text-white px-6 py-2 rounded font-bold text-sm hover:bg-primary/90 disabled:opacity-70 transition-colors"
                 >
                   {isAdding ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Add Experience Modal */}
+      {isExpModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-border">
+              <div className="flex flex-col">
+                <h2 className="text-lg font-bold text-primary uppercase tracking-tight">Add Experience</h2>
+                <p className="text-xs text-muted font-semibold">{selectedUser?.fullName}</p>
+              </div>
+              <button onClick={() => setIsExpModalOpen(false)} className="text-muted hover:text-primary transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={submitAddExperience} className="p-6 flex flex-col gap-4">
+              {expError && (
+                <div className="bg-red-50 text-red-600 p-3 rounded text-sm mb-2">
+                  {expError}
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Experience Type</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setExpType('kyorugi')}
+                    className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-colors ${expType === 'kyorugi' ? 'bg-primary text-white' : 'bg-gray-100 text-muted hover:bg-gray-200'}`}
+                  >
+                    Kyorugi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpType('poomsae')}
+                    className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-colors ${expType === 'poomsae' ? 'bg-[#b50000] text-white' : 'bg-gray-100 text-muted hover:bg-gray-200'}`}
+                  >
+                    Poomsae
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4">
+                <div className="col-span-1">
+                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">
+                    Date
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="Date" 
+                    value={expYear}
+                    onChange={(e) => setExpYear(e.target.value)}
+                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    required
+                  />
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Location</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Kuala Lumpur" 
+                    value={expLocation}
+                    onChange={(e) => setExpLocation(e.target.value)}
+                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Event Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. National Championship" 
+                  value={expEvent}
+                  onChange={(e) => setExpEvent(e.target.value)}
+                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Role / Responsibility</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Referee / Judge" 
+                  value={expRole}
+                  onChange={(e) => setExpRole(e.target.value)}
+                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsExpModalOpen(false)}
+                  className="px-4 py-2 text-sm font-bold text-muted hover:text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isExpSaving}
+                  className="bg-primary text-white px-6 py-2 rounded font-bold text-sm hover:bg-primary/90 disabled:opacity-70 transition-colors"
+                >
+                  {isExpSaving ? 'Saving...' : 'Add Experience'}
                 </button>
               </div>
             </form>

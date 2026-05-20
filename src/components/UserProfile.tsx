@@ -1437,7 +1437,7 @@ export default function UserProfile({
                   <thead>
                     <tr>
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                        Year
+                        Date
                       </th>
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Event Name
@@ -1471,7 +1471,7 @@ export default function UserProfile({
                                 newExp[index].year = e.target.value;
                                 handleInputChange("experienceHistory", newExp);
                               }}
-                              placeholder="YYYY"
+                              placeholder="Date"
                             />
                           ) : (
                             item.year
@@ -1596,7 +1596,7 @@ export default function UserProfile({
                   <thead>
                     <tr>
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                        Year
+                        Date
                       </th>
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Event Name
@@ -1630,7 +1630,7 @@ export default function UserProfile({
                                 newExp[index].year = e.target.value;
                                 handleInputChange("poomsaeExperienceHistory", newExp);
                               }}
-                              placeholder="YYYY"
+                              placeholder="Date"
                             />
                           ) : (
                             item.year

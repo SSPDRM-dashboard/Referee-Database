@@ -153,7 +153,11 @@ export default function AdminDashboard() {
     <div className="flex min-h-screen bg-background">
       <aside className="w-[260px] bg-white border-r border-border flex flex-col shrink-0">
         <div className="p-6 border-b border-border flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary [clip-path:polygon(50%_0%,100%_38%,82%_100%,18%_100%,0%_38%)] shrink-0"></div>
+          <img 
+            src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png" 
+            alt="TM Logo" 
+            className="h-10 w-auto object-contain shrink-0" 
+          />
           <div className="text-[16px] font-extrabold tracking-[-0.5px] uppercase text-primary leading-tight">
             TM Referee<br />Admin
           </div>

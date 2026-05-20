@@ -217,6 +217,14 @@ export default function UserProfile({
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  const annualFees = (isEditing ? editedData : userData)?.annualFeeHistory || [];
+  const latestFeeYear =
+    annualFees.length > 0
+      ? [...annualFees].sort(
+          (a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0),
+        )[0].year
+      : "N/A";
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError("");
@@ -499,7 +507,11 @@ export default function UserProfile({
       {/* Left Sidebar Tabs */}
       <aside className="w-[260px] bg-white border-r border-border flex flex-col shrink-0">
         <div className="p-6 border-b border-border flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary [clip-path:polygon(50%_0%,100%_38%,82%_100%,18%_100%,0%_38%)] shrink-0"></div>
+          <img 
+            src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png" 
+            alt="TM Logo" 
+            className="h-10 w-auto object-contain shrink-0" 
+          />
           <div className="text-[16px] font-extrabold tracking-[-0.5px] uppercase text-primary leading-tight">
             TM Referee
             <br />
@@ -584,20 +596,22 @@ export default function UserProfile({
             Promotion
           </button>
 
-          <button
-            onClick={() => setActiveTab("evaluations")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
-              activeTab === "evaluations"
-                ? "bg-primary text-white"
-                : "text-muted hover:bg-gray-50"
-            }`}
-          >
-            <ClipboardCheck size={18} />
-            Evaluations
-          </button>
-
           {isAdminView && (
             <>
+              <div className="text-xs font-bold text-muted uppercase tracking-wider mb-2 mt-4 px-4">
+                Admin Controls
+              </div>
+              <button
+                onClick={() => setActiveTab("evaluations")}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
+                  activeTab === "evaluations"
+                    ? "bg-primary text-white"
+                    : "text-muted hover:bg-gray-50"
+                }`}
+              >
+                <ClipboardCheck size={18} />
+                Evaluations
+              </button>
               <button
                 onClick={() => setActiveTab("ban")}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
@@ -768,6 +782,44 @@ export default function UserProfile({
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6 flex-1">
                       <div className="flex flex-col">
                         <label className="block text-[11px] text-muted mb-1">
+                          Full Name
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editedData.fullName || ""}
+                            onChange={(e) =>
+                              handleInputChange("fullName", e.target.value)
+                            }
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {userData.fullName || "N/A"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
+                          TM Membership ID
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editedData.tmMembershipId || ""}
+                            onChange={(e) =>
+                              handleInputChange("tmMembershipId", e.target.value)
+                            }
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {userData.tmMembershipId || "N/A"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
                           IC Number
                         </label>
                         {isEditing ? (
@@ -880,6 +932,52 @@ export default function UserProfile({
                       ) : (
                         <p className="m-0 font-semibold text-[14px]">
                           {userData.premierClub || "N/A"}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="block text-[11px] text-muted mb-1">
+                        Latest Annual Fee Paid
+                      </label>
+                      <p className="m-0 font-semibold text-[14px]">
+                        {latestFeeYear}
+                      </p>
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="block text-[11px] text-muted mb-1">
+                        Dan
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editedData.kukkiwonDan || ""}
+                          onChange={(e) =>
+                            handleInputChange("kukkiwonDan", parseInt(e.target.value) || 0)
+                          }
+                          className="font-semibold text-[14px] border-b border-primary focus:outline-none"
+                        />
+                      ) : (
+                        <p className="m-0 font-semibold text-[14px]">
+                          {userData.kukkiwonDan || "N/A"}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col md:col-span-2">
+                      <label className="block text-[11px] text-muted mb-1">
+                        Home Address
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          value={editedData.address || ""}
+                          onChange={(e) =>
+                            handleInputChange("address", e.target.value)
+                          }
+                          rows={2}
+                          className="font-semibold text-[14px] border-b border-primary focus:outline-none w-full bg-transparent resize-none"
+                        />
+                      ) : (
+                        <p className="m-0 font-semibold text-[14px] leading-snug">
+                          {userData.address || "N/A"}
                         </p>
                       )}
                     </div>
@@ -1967,7 +2065,7 @@ export default function UserProfile({
             </div>
           )}
 
-          {activeTab === "evaluations" && (
+          {activeTab === "evaluations" && isAdminView && (
             <div className="bg-white border border-border rounded-lg p-5">
               <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                 <span>Referee Evaluations</span>
@@ -2192,7 +2290,7 @@ export default function UserProfile({
             </div>
           )}
 
-          {activeTab === "ban" && (
+          {activeTab === "ban" && isAdminView && (
             <div className="bg-white border border-border rounded-lg p-5">
               <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                 <span className="text-red-600">Ban History</span>
@@ -2432,6 +2530,7 @@ export default function UserProfile({
           {activeTab !== "personal" &&
             activeTab !== "id_card" &&
             activeTab !== "experience" &&
+            activeTab !== "poomsae_experience" &&
             activeTab !== "annual_fee" &&
             activeTab !== "promotion" &&
             activeTab !== "evaluations" &&

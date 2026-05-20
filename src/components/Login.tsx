@@ -99,7 +99,11 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 border border-border text-center">
-        <div className="w-16 h-16 bg-primary [clip-path:polygon(50%_0%,100%_38%,82%_100%,18%_100%,0%_38%)] mx-auto mb-6"></div>
+        <img 
+          src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png" 
+          alt="TM Logo" 
+          className="h-16 w-auto object-contain mx-auto mb-6" 
+        />
         <h1 className="text-2xl font-extrabold text-primary mb-2 uppercase tracking-tight">
           TM Referee Registry
         </h1>

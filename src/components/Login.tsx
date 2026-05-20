@@ -146,7 +146,12 @@ export default function Login() {
       }
     } catch (err: any) {
       console.error(err);
-      if (err.code === "auth/popup-blocked" || err.message?.includes("popup")) {
+      if (err.code === "auth/unauthorized-domain") {
+        setError(
+          "Firebase Auth: This domain is not authorized. Please add both '" + 
+          window.location.hostname + "' and 'ais-pre-yi5er6x2m2dk4bk36poyxe-385574557079.asia-southeast1.run.app' to your Firebase Console under Authentication > Settings > Authorized Domains."
+        );
+      } else if (err.code === "auth/popup-blocked" || err.message?.includes("popup")) {
         setError(
           "Sign-In popup blocked by iframe restriction. To log in with Google, click the 'Open in new tab' button at the top-right of the preview, or log in with your admin email and a password below."
         );

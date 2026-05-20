@@ -17,30 +17,84 @@ export default function Login() {
     setLoading(true);
     try {
       if (!tmId.trim()) {
-        throw new Error("Please enter a valid TM Blackbelt ID.");
+        throw new Error("Please enter a valid TM Blackbelt ID or Admin Email.");
       }
 
-      // We use a dummy email domain internally for Firebase Auth
-      const cleanTMId = tmId.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-      let dummyEmail = `${cleanTMId}@tmreferee.local`;
+      let emailToUse = "";
+      const isEmail = tmId.includes("@");
 
-      try {
-        const mappingDoc = await getDoc(doc(db, "login_mappings", cleanTMId));
-        if (mappingDoc.exists() && mappingDoc.data().email) {
-          dummyEmail = mappingDoc.data().email;
+      if (isEmail) {
+        emailToUse = tmId.trim().toLowerCase();
+      } else {
+        // We use a dummy email domain internally for Firebase Auth
+        const cleanTMId = tmId.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+        emailToUse = `${cleanTMId}@tmreferee.local`;
+
+        try {
+          const mappingDoc = await getDoc(doc(db, "login_mappings", cleanTMId));
+          if (mappingDoc.exists() && mappingDoc.data().email) {
+            emailToUse = mappingDoc.data().email;
+          }
+        } catch (e) {
+          console.error("Mapping read failed", e);
         }
-      } catch (e) {
-        console.error("Mapping read failed", e);
       }
 
-      const result = await signInWithEmailAndPassword(
-        auth,
-        dummyEmail,
-        password,
-      );
-      const userDoc = await getDoc(doc(db, "users", result.user.uid));
+      let result;
+      try {
+        result = await signInWithEmailAndPassword(
+          auth,
+          emailToUse,
+          password,
+        );
+      } catch (authErr: any) {
+        // If they enter the admin's email and it isn't created in firestore yet, let them auto-bootstrap with password
+        if (
+          isEmail &&
+          emailToUse === "anak2nsky@gmail.com" &&
+          (authErr.code === "auth/user-not-found" || authErr.code === "auth/invalid-credential" || authErr.code === "auth/wrong-password")
+        ) {
+          // Attempt to register the admin email in Firebase Auth to guarantee they have an iframe-friendly password login
+          try {
+            const { createUserWithEmailAndPassword } = await import("firebase/auth");
+            result = await createUserWithEmailAndPassword(auth, emailToUse, password);
+            
+            // Set user profile in firestore
+            await setDoc(doc(db, "users", result.user.uid), {
+              uid: result.user.uid,
+              email: emailToUse,
+              role: "admin",
+              fullName: "Admin (Leo)",
+              createdAt: new Date().toISOString(),
+              isActive: true,
+            });
+          } catch (createErr: any) {
+            console.error("Failed to bootstrap admin password account", createErr);
+            throw authErr; // throw original
+          }
+        } else {
+          throw authErr;
+        }
+      }
 
-      if (userDoc.exists() && userDoc.data().role === "admin") {
+      const userDoc = await getDoc(doc(db, "users", result.user.uid));
+      let role = "user";
+
+      if (userDoc.exists()) {
+        role = userDoc.data().role || "user";
+      } else if (emailToUse === "anak2nsky@gmail.com") {
+        role = "admin";
+        await setDoc(doc(db, "users", result.user.uid), {
+          uid: result.user.uid,
+          email: emailToUse,
+          role: "admin",
+          fullName: "Admin (Leo)",
+          createdAt: new Date().toISOString(),
+          isActive: true,
+        });
+      }
+
+      if (role === "admin") {
         navigate("/admin");
       } else {
         navigate("/profile");
@@ -52,7 +106,7 @@ export default function Login() {
         err.code === "auth/user-not-found" ||
         err.code === "auth/wrong-password"
       ) {
-        setError("Invalid TM Blackbelt ID or Password.");
+        setError("Invalid ID/Email or Password.");
       } else {
         setError(err.message);
       }
@@ -92,7 +146,13 @@ export default function Login() {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message);
+      if (err.code === "auth/popup-blocked" || err.message?.includes("popup")) {
+        setError(
+          "Sign-In popup blocked by iframe restriction. To log in with Google, click the 'Open in new tab' button at the top-right of the preview, or log in with your admin email and a password below."
+        );
+      } else {
+        setError(err.message);
+      }
     }
   };
 
@@ -120,11 +180,11 @@ export default function Login() {
         <form onSubmit={handleLogin} className="flex flex-col gap-4 mb-6">
           <div className="text-left">
             <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">
-              TM Blackbelt ID
+              TM Blackbelt ID or Admin Email
             </label>
             <input
               type="text"
-              placeholder="e.g. TM-12345"
+              placeholder="e.g. TM-12345 or anak2nsky@gmail.com"
               value={tmId}
               onChange={(e) => setTmId(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"

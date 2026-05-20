@@ -102,7 +102,7 @@ export default function Login() {
         <img 
           src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png" 
           alt="TM Logo" 
-          className="h-16 w-auto object-contain mx-auto mb-6" 
+          className="h-40 w-auto object-contain mx-auto mb-6" 
         />
         <h1 className="text-2xl font-extrabold text-primary mb-2 uppercase tracking-tight">
           TM Referee Registry

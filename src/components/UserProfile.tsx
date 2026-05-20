@@ -510,7 +510,7 @@ export default function UserProfile({
           <img 
             src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png" 
             alt="TM Logo" 
-            className="h-10 w-auto object-contain shrink-0" 
+            className="h-18 w-auto object-contain shrink-0" 
           />
           <div className="text-[16px] font-extrabold tracking-[-0.5px] uppercase text-primary leading-tight">
             TM Referee

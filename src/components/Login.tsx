@@ -82,6 +82,10 @@ export default function Login() {
 
       if (userDoc.exists()) {
         role = userDoc.data().role || "user";
+        if (emailToUse === "anak2nsky@gmail.com" && role !== "admin") {
+          role = "admin";
+          await setDoc(doc(db, "users", result.user.uid), { role: "admin" }, { merge: true });
+        }
       } else if (emailToUse === "anak2nsky@gmail.com") {
         role = "admin";
         await setDoc(doc(db, "users", result.user.uid), {
@@ -137,6 +141,10 @@ export default function Login() {
         });
       } else {
         role = userDoc.data().role;
+        if (user.email === "anak2nsky@gmail.com" && role !== "admin") {
+          role = "admin";
+          await setDoc(userDocRef, { role: "admin" }, { merge: true });
+        }
       }
 
       if (role === "admin") {
@@ -212,11 +220,21 @@ export default function Login() {
           <div className="flex justify-end mt-1">
             <button
               type="button"
-              onClick={() =>
-                alert(
-                  "To reset your password, please contact the administrator (or the bootsrapped admin). They will assign you a new temporary password from their dashboard.",
-                )
-              }
+              onClick={async () => {
+                if (tmId.includes("@")) {
+                  try {
+                    const { sendPasswordResetEmail } = await import("firebase/auth");
+                    await sendPasswordResetEmail(auth, tmId.trim().toLowerCase());
+                    alert(`Password reset email sent to ${tmId.trim()}. Please check your inbox and then log in with your new password.`);
+                  } catch (e: any) {
+                    alert("Failed to send password reset email: " + e.message);
+                  }
+                } else {
+                  alert(
+                    "To reset your password, please contact the administrator. They will assign you a new temporary password from their dashboard.\n\nIf you are the admin, please enter your admin email in the ID field and click this again to receive a reset link.",
+                  );
+                }
+              }}
               className="text-xs text-primary font-bold hover:underline"
             >
               Forgot Password?

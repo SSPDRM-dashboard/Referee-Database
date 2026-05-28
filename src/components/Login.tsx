@@ -17,7 +17,7 @@ export default function Login() {
     setLoading(true);
     try {
       if (!tmId.trim()) {
-        throw new Error("Please enter a valid TM Blackbelt ID or Admin Email.");
+        throw new Error("Please enter a valid TM Blackbelt ID.");
       }
 
       let emailToUse = "";
@@ -110,7 +110,7 @@ export default function Login() {
         err.code === "auth/user-not-found" ||
         err.code === "auth/wrong-password"
       ) {
-        setError("Invalid ID/Email or Password.");
+        setError("Invalid TM Blackbelt ID or Password.");
       } else {
         setError(err.message);
       }
@@ -193,11 +193,10 @@ export default function Login() {
         <form onSubmit={handleLogin} className="flex flex-col gap-4 mb-6">
           <div className="text-left">
             <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">
-              TM Blackbelt ID or Admin Email
+              TM Blackbelt ID
             </label>
             <input
               type="text"
-              placeholder="e.g. TM-12345 or anak2nsky@gmail.com"
               value={tmId}
               onChange={(e) => setTmId(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
@@ -210,7 +209,6 @@ export default function Login() {
             </label>
             <input
               type="password"
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
@@ -245,7 +243,7 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-primary/90 transition-colors mt-4 disabled:opacity-70"
           >
-            {loading ? "Signing in..." : "Login as Referee"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 

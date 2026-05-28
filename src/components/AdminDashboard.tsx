@@ -266,9 +266,10 @@ export default function AdminDashboard() {
                 <thead>
                   <tr className="bg-gray-50 border-b border-border">
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Name</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Login ID</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Password</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Referee ID</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">IC Number</th>
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Role</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Status</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Actions</th>
                   </tr>
@@ -277,11 +278,12 @@ export default function AdminDashboard() {
                   {filteredUsers.map(user => (
                     <tr key={user.id} className="border-b border-border hover:bg-gray-50">
                       <td className="p-4 font-semibold text-sm">{user.fullName || 'N/A'}</td>
-                      <td className="p-4 text-sm font-mono text-muted whitespace-nowrap">
+                      <td className="p-4 text-sm font-mono text-primary font-bold">{user.tmMembershipId || 'N/A'}</td>
+                      <td className="p-4 text-xs text-muted italic">Hidden<br/><span className="text-[10px]">(Reset via Profile)</span></td>
+                      <td className="p-4 text-sm text-muted whitespace-nowrap">
                         {user.tmMembershipId ? `${user.tmMembershipId}-K${user.kyorugiRefereeLevel || 'IR'}-P${user.poomsaeRefereeLevel || 'IR'}-${user.refereeSerialNumber || '0001'}` : 'N/A'}
                       </td>
                       <td className="p-4 text-sm text-muted">{user.icNumber || 'N/A'}</td>
-                      <td className="p-4 text-sm uppercase">{user.role}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${user.isActive ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-gray-200 text-gray-600'}`}>
                           {user.isActive ? 'Active' : 'Inactive'}

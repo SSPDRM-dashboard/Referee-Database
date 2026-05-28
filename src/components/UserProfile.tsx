@@ -698,14 +698,16 @@ export default function UserProfile({
                   </button>
                 )
               ) : (
-                <button
-                  onClick={handleSave}
-                  disabled={saveLoading}
-                  className="bg-success text-white px-4 py-2 rounded font-bold text-sm hover:opacity-90 transition-colors flex items-center gap-2"
-                >
-                  <Save size={16} />
-                  {saveLoading ? "Saving..." : "Save Changes"}
-                </button>
+                (isAdminView || ["personal", "experience", "poomsae_experience"].includes(activeTab)) && (
+                  <button
+                    onClick={handleSave}
+                    disabled={saveLoading}
+                    className="bg-success text-white px-4 py-2 rounded font-bold text-sm hover:opacity-90 transition-colors flex items-center gap-2"
+                  >
+                    <Save size={16} />
+                    {saveLoading ? "Saving..." : "Save Changes"}
+                  </button>
+                )
               )}
             </div>
           </header>
@@ -765,7 +767,7 @@ export default function UserProfile({
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                           </svg>
                         )}
-                        {isEditing && (
+                        {isEditing && isAdminView && (
                           <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                             <span className="text-white text-[10px] font-bold uppercase">Change</span>
                             <input
@@ -1173,9 +1175,9 @@ export default function UserProfile({
           )}
 
           {activeTab === "id_card" && (
-            <div className={`grid grid-cols-1 ${isEditing ? "lg:grid-cols-[340px_1fr]" : ""} gap-8 h-full bg-white border border-border rounded-lg p-10 mt-1`}>
+            <div className={`grid grid-cols-1 ${isEditing && isAdminView ? "lg:grid-cols-[340px_1fr]" : ""} gap-8 h-full bg-white border border-border rounded-lg p-10 mt-1`}>
               {/* Left Column (Editor) */}
-              {isEditing && (
+              {isEditing && isAdminView && (
                 <div className="flex flex-col gap-4">
                   {/* Digital ID Cards Form UI */}
                   <div className="w-[340px] h-[480px] bg-card rounded-2xl relative overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.1)] border border-border flex flex-col">

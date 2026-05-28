@@ -101,88 +101,189 @@ const RefereeCard = ({
   stateClub,
   validThru,
 }: any) => {
-  const headerBgColor = title === "POOMSAE" ? "#b50000" : "#0265ad";
-  const cardBgColor = title === "POOMSAE" ? "#FFF0F0" : "#F0F8FF";
+  const isPoomsae = title === "POOMSAE";
+
+  const themeColors = isPoomsae
+    ? {
+        border: "linear-gradient(135deg, #e3c0b1 0%, #ffffff 20%, #b37f69 50%, #fdf5f2 75%, #7a4634 100%)",
+        topBg1: "#511420",
+        topBg2: "#330811",
+        bottomBg: "linear-gradient(180deg, #f0e4dd 0%, #ebd7cb 100%)",
+        textMain: "#5e1523",
+        certType: "Poomsae",
+        refereeGradient: "linear-gradient(90deg, #b37f69 0%, #e3c0b1 30%, #7a4634 70%, #b37f69 100%)",
+        titleColor: "#cfd8dc"
+      }
+    : {
+        border: "linear-gradient(135deg, #c7d2da 0%, #ffffff 20%, #8ba0b0 50%, #ffffff 75%, #566c7d 100%)",
+        topBg1: "#25486b",
+        topBg2: "#142d47",
+        bottomBg: "linear-gradient(180deg, #dfebf2 0%, #c1d4e3 100%)",
+        textMain: "#1f4262",
+        certType: "Kyorugi",
+        refereeGradient: "linear-gradient(90deg, #78909c 0%, #cfd8dc 30%, #546e7a 70%, #78909c 100%)",
+        titleColor: "#cfd8dc"
+      };
+
+  const levelParts = level ? level.split(" ") : ["INTERNATIONAL", "REFEREE"];
+  const levelLine2 = levelParts[levelParts.length - 1] || "REFEREE";
+  const levelLine1 = levelParts.slice(0, -1).join(" ") || "INTERNATIONAL";
+
+  const certNumber = idStr || "TMXXXX-KIR-PIR-0001";
 
   return (
     <div
       id={`${title.toLowerCase()}-card`}
-      className="w-[340px] relative overflow-hidden flex flex-col font-sans mb-4 shrink-0"
+      className="w-[340px] h-[570px] rounded-[18px] p-[6px] relative flex flex-col font-sans shrink-0 overflow-hidden shadow-2xl mb-4"
       style={{
-        backgroundColor: cardBgColor,
-        boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-        border: "1px solid #E5E7EB",
-        color: "#000000"
+        background: themeColors.border,
       }}
     >
-      {/* Header */}
-      <div
-        className="pt-4 pb-16 flex flex-col items-center justify-center text-center relative"
-        style={{ backgroundColor: headerBgColor, color: "#FFFFFF" }}
+      <div 
+        className="w-full h-full rounded-[13px] relative overflow-hidden flex flex-col items-center justify-between"
+        style={{ background: themeColors.bottomBg }}
       >
-        <div className="flex items-center justify-center">
+        {/* Top Dark Section with SVG Swoosh & Facets */}
+        <div className="absolute top-0 left-0 w-full h-[250px] overflow-visible pointer-events-none">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 340 250" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id={`${title}-topBg`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={themeColors.topBg1} />
+                <stop offset="100%" stopColor={themeColors.topBg2} />
+              </linearGradient>
+            </defs>
+            {/* Main Dark Background Shape */}
+            <path 
+              d="M 0,0 L 340,0 L 340,130 C 230,230 100,240 0,170 Z" 
+              fill={`url(#${title}-topBg)`} 
+            />
+            
+            {/* Geometric Facets / Diamond Pattern */}
+            <g style={{ mixBlendMode: 'overlay', opacity: 0.15 }}>
+              <polygon points="0,0 180,0 120,190" fill="#ffffff" />
+              <polygon points="180,0 340,0 340,130" fill="#000000" />
+              <polygon points="340,130 340,200 120,190" fill="#ffffff" />
+              <polygon points="0,0 120,190 0,220" fill="#000000" />
+            </g>
+
+            {/* Sweep Metallic Lines */}
+            <path 
+              d="M -5,170 C 100,240 230,230 345,130" 
+              fill="none" 
+              stroke="rgba(255,255,255,0.5)" 
+              strokeWidth="7" 
+            />
+            {/* Sub-shadow for the sweep */}
+            <path 
+              d="M -5,175 C 100,245 230,235 345,135" 
+              fill="none" 
+              stroke="rgba(0,0,0,0.2)" 
+              strokeWidth="5" 
+            />
+          </svg>
+        </div>
+
+        {/* Header Content */}
+        <div className="relative z-10 flex flex-col items-center pt-3 w-full text-white">
           <img
             src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png"
-            alt="TM"
+            alt="TM Logo"
             crossOrigin="anonymous"
-            className="max-h-[85px] max-w-full object-contain p-[4px]"
+            className="w-[150px] h-[150px] object-contain mb-[4px] drop-shadow-md"
           />
-        </div>
-        <h2 className="text-[22px] font-bold tracking-wide m-0 leading-tight uppercase mt-2 mb-6" style={{ transform: "translateY(-10px)" }}>
-          {title}
-        </h2>
-      </div>
-
-      {/* Photo */}
-      <div
-        className="w-[130px] h-[150px] -mt-[60px] mx-auto mb-2 flex items-center justify-center relative z-10 overflow-hidden"
-        style={{ backgroundColor: "#E2E8F0", borderRadius: "4px 4px 4px 4px" }}
-      >
-        {photo ? (
-          <img src={photo} alt={name} className="w-full h-full object-cover" />
-        ) : (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="#CBD5E0">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-          </svg>
-        )}
-      </div>
-
-      {/* Details */}
-      <div className="px-4 pb-6 text-center flex flex-col" style={{ color: "#212529" }}>
-        <div className="flex flex-col">
-          <p className="text-[15px] font-bold uppercase tracking-[1px] m-0 mb-0.5" style={{ color: "#003366" }}>
-            {name || "N/A"}
-          </p>
-          <h1
-            className="text-[28px] font-bold uppercase tracking-tight m-0 leading-none mb-2 min-h-[56px] flex items-center justify-center"
-            style={{ color: "#000000", transform: "scaleY(1.05)", letterSpacing: "-0.5px" }}
+          <h2
+            className="text-[34px] font-black tracking-[4px] uppercase m-0 leading-none mb-[12px]"
+            style={{
+              color: themeColors.titleColor,
+              textShadow: "0 2px 6px rgba(0,0,0,0.5)",
+              transform: "scaleY(1.05)"
+            }}
           >
-            {level}
-          </h1>
-
-          <p
-            className="font-mono font-bold text-[14px] tracking-[3px] m-0 mb-1 px-2 whitespace-nowrap"
-            style={{ color: "#8ea3b8", textShadow: "1px 1px 0 rgba(0,0,0,0.05)" }}
-          >
-            {idStr || "TMXXXX-KIR-PIR-0001"}
-          </p>
+            {title}
+          </h2>
         </div>
 
-        {/* Footer Grid */}
-        <div className="grid grid-cols-[1fr_120px] pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
-          <div className="flex flex-col items-center px-2 pt-3 pb-3 justify-center" style={{ borderRight: "1px solid #E5E7EB" }}>
-            <span className="text-[11px] mb-1" style={{ color: "#000000" }}>STATE/CLUB</span>
-            <span className="text-[13px] font-bold uppercase text-center px-1" style={{ color: "#000000", wordBreak: "break-word" }}>
-              {stateClub || "N/A"}
-            </span>
+        {/* Photo Container */}
+        <div 
+          className="relative z-20 w-[145px] h-[175px] mt-[2px] rounded-[2px] p-[6px] flex items-center justify-center shadow-[0_12px_24px_rgba(0,0,0,0.4)] mb-[4px]"
+          style={{ background: themeColors.border }}
+        >
+          {/* Inner silver/white frame */}
+          <div className="w-full h-full bg-white p-[2px]">
+            {/* Inner black thin line */}
+            <div className="w-full h-full border-[1.5px] border-[#333333] bg-[#f1f5f9] flex items-center justify-center overflow-hidden">
+              {photo ? (
+                <img src={photo} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="#cbd5e1">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col items-center px-2 pt-3 pb-3 justify-center">
-            <span className="text-[10px] uppercase mb-1 whitespace-nowrap" style={{ color: "#8ea3b8" }}>
-              VALID THRU
-            </span>
-            <span className="text-[20px] font-medium" style={{ color: "#8ea3b8", lineHeight: "1" }}>
-              {validThru || "YYYY"}
-            </span>
+        </div>
+
+        {/* Details section */}
+        <div className="relative z-10 w-full flex flex-col px-5 pb-[18px] h-full justify-between">
+          <div className="text-center mt-[14px]">
+            {levelLine1 && (
+              <div
+                className="text-[25px] font-black uppercase tracking-[1px] leading-none"
+                style={{ color: themeColors.textMain, transform: "scaleY(1.05)" }}
+              >
+                {levelLine1}
+              </div>
+            )}
+            {levelLine2 && (
+              <div
+                className="text-[26px] font-black uppercase tracking-[3px] leading-none mt-[4px]"
+                style={{
+                  color: themeColors.textMain,
+                  filter: "drop-shadow(1px 2px 2px rgba(0,0,0,0.3))",
+                  transform: "scaleY(1.05)"
+                }}
+              >
+                {levelLine2}
+              </div>
+            )}
+            <div className="mt-[12px] text-[20px] font-bold uppercase tracking-[1.5px] leading-none text-[#111111]">
+              {name || "N/A"}
+            </div>
+            <div className="mt-[6px] text-[15px] font-bold uppercase tracking-[1px] leading-none text-[#475569]">
+              {certNumber}
+            </div>
+          </div>
+
+          <div className="flex flex-col mt-auto pb-1">
+            {/* Divider and Details Row */}
+            <div className="grid grid-cols-[1fr_1fr] items-center text-center relative gap-0 pt-[8px] mb-[10px] border-t-[2px] border-[#8a9ba8]">
+              <div className="flex flex-col border-r-[2px] border-[#8a9ba8] px-2 h-full justify-center">
+                <span className="text-[11px] font-bold text-[#475569] uppercase tracking-wide leading-tight mb-[4px]">
+                  STATE/CLUB
+                </span>
+                <span className="text-[18px] font-black text-[#0f172a] uppercase leading-tight truncate">
+                  {stateClub || "N/A"}
+                </span>
+              </div>
+              <div className="flex flex-col px-2 h-full justify-center">
+                <span className="text-[11px] font-bold text-[#475569] uppercase tracking-wide leading-tight mb-[4px]">
+                  VALID THRU
+                </span>
+                <span className="text-[22px] font-black text-[#0f172a] uppercase leading-none">
+                  {validThru || "YYYY"}
+                </span>
+              </div>
+              
+              {/* TM Logo Watermark */}
+              <div className="absolute -bottom-[20px] -right-[15px] opacity-[0.06] scale-[2.2] pointer-events-none grayscale">
+                <img
+                  src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png"
+                  crossOrigin="anonymous"
+                  className="w-[100px] h-[100px] object-contain"
+                  alt=""
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -767,7 +868,7 @@ export default function UserProfile({
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                           </svg>
                         )}
-                        {isEditing && isAdminView && (
+                        {isEditing && (
                           <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                             <span className="text-white text-[10px] font-bold uppercase">Change</span>
                             <input
@@ -1247,7 +1348,7 @@ export default function UserProfile({
                           handleInputChange("fullName", e.target.value)
                         }
                         disabled={!isAdminView}
-                        className="text-[18px] font-bold m-0 mb-1 w-full text-center border-b border-primary focus:outline-none disabled:bg-transparent"
+                        className="text-[23px] font-bold m-0 mb-1 w-full text-center border-b border-primary focus:outline-none disabled:bg-transparent"
                         placeholder="Full Name"
                       />
 

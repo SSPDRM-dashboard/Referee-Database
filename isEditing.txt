@@ -1,0 +1,903 @@
+199-  const navigate = useNavigate();
+200-
+201-  const [activeTab, setActiveTab] = useState("personal");
+202-  const [userData, setUserData] = useState<any>(null);
+203-  const [editedData, setEditedData] = useState<any>(null);
+204:  const [isEditing, setIsEditing] = useState(false);
+205-  const [loading, setLoading] = useState(true);
+206-  const [saveLoading, setSaveLoading] = useState(false);
+207-
+208-  const [photoForCrop, setPhotoForCrop] = useState<string | null>(null);
+209-  const [crop, setCrop] = useState({ x: 0, y: 0 });
+--
+215-  const [newPassword, setNewPassword] = useState("");
+216-  const [passwordError, setPasswordError] = useState("");
+217-  const [passwordSuccess, setPasswordSuccess] = useState("");
+218-  const [passwordLoading, setPasswordLoading] = useState(false);
+219-
+220:  const annualFees = (isEditing ? editedData : userData)?.annualFeeHistory || [];
+221-  const latestFeeYear =
+222-    annualFees.length > 0
+223-      ? [...annualFees].sort(
+224-          (a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0),
+225-        )[0].year
+--
+686-              {activeTab === "evaluations" && "Referee Evaluations"}
+687-              {activeTab === "ban" && "Ban History"}
+688-              {activeTab === "account" && "Account Settings"}
+689-            </h1>
+690-            <div className="flex gap-2">
+691:              {(!isEditing) ? (
+692-                (isAdminView || ["personal", "experience", "poomsae_experience"].includes(activeTab)) && (
+693-                  <button
+694-                    onClick={() => setIsEditing(true)}
+695-                    className="bg-primary text-white px-4 py-2 rounded font-bold text-sm hover:bg-primary/90 transition-colors"
+696-                  >
+--
+719-              <div className="grid grid-rows-[auto_1fr_auto] gap-5">
+720-                {/* Identity & Contact */}
+721-                <div className="bg-white border border-border rounded-lg p-5">
+722-                  <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+723-                    <span>Identity & Contact</span>
+724:                    {isEditing ? (
+725-                      <select
+726-                        value={editedData.isActive ? "true" : "false"}
+727-                        onChange={(e) =>
+728-                          handleInputChange(
+729-                            "isActive",
+--
+749-                    <div className="flex flex-col items-center shrink-0">
+750-                      <label className="block text-[11px] text-muted mb-2 tracking-widest uppercase font-bold">
+751-                        Profile Photo
+752-                      </label>
+753-                      <div className="relative group w-28 h-32 rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center shadow-sm">
+754:                        {(isEditing ? editedData.photoUrl : userData.photoUrl) ? (
+755-                          <img
+756:                            src={isEditing ? editedData.photoUrl : userData.photoUrl}
+757-                            className="w-full h-full object-cover"
+758-                            alt="Profile"
+759-                          />
+760-                        ) : (
+761-                          <svg
+--
+765-                            fill="#CBD5E0"
+766-                          >
+767-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+768-                          </svg>
+769-                        )}
+770:                        {isEditing && isAdminView && (
+771-                          <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+772-                            <span className="text-white text-[10px] font-bold uppercase">Change</span>
+773-                            <input
+774-                              type="file"
+775-                              className="hidden"
+--
+784-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 flex-1">
+785-                      <div className="flex flex-col">
+786-                        <label className="block text-[11px] text-muted mb-1">
+787-                          Full Name
+788-                        </label>
+789:                        {isEditing ? (
+790-                          <input
+791-                            type="text"
+792-                            value={editedData.fullName || ""}
+793-                            onChange={(e) =>
+794-                              handleInputChange("fullName", e.target.value)
+--
+803-                      </div>
+804-                      <div className="flex flex-col">
+805-                        <label className="block text-[11px] text-muted mb-1">
+806-                          TM Membership ID
+807-                        </label>
+808:                        {isEditing ? (
+809-                          <input
+810-                            type="text"
+811-                            value={editedData.tmMembershipId || ""}
+812-                            onChange={(e) =>
+813-                              handleInputChange("tmMembershipId", e.target.value)
+--
+822-                      </div>
+823-                      <div className="flex flex-col">
+824-                        <label className="block text-[11px] text-muted mb-1">
+825-                          IC Number
+826-                        </label>
+827:                        {isEditing ? (
+828-                          <input
+829-                            type="text"
+830-                            value={editedData.icNumber || ""}
+831-                            onChange={(e) =>
+832-                              handleInputChange("icNumber", e.target.value)
+--
+841-                      </div>
+842-                    <div className="flex flex-col">
+843-                      <label className="block text-[11px] text-muted mb-1">
+844-                        Date of Birth
+845-                      </label>
+846:                      {isEditing ? (
+847-                        <input
+848-                          type="text"
+849-                          value={editedData.dateOfBirth || ""}
+850-                          onChange={(e) =>
+851-                            handleInputChange("dateOfBirth", e.target.value)
+--
+860-                    </div>
+861-                    <div className="flex flex-col">
+862-                      <label className="block text-[11px] text-muted mb-1">
+863-                        Gender
+864-                      </label>
+865:                      {isEditing ? (
+866-                        <select
+867-                          value={editedData.gender || ""}
+868-                          onChange={(e) =>
+869-                            handleInputChange("gender", e.target.value)
+870-                          }
+--
+882-                    </div>
+883-                    <div className="flex flex-col">
+884-                      <label className="block text-[11px] text-muted mb-1">
+885-                        Phone Number
+886-                      </label>
+887:                      {isEditing ? (
+888-                        <input
+889-                          type="text"
+890-                          value={editedData.phoneNumber || ""}
+891-                          onChange={(e) =>
+892-                            handleInputChange("phoneNumber", e.target.value)
+--
+901-                    </div>
+902-                    <div className="flex flex-col">
+903-                      <label className="block text-[11px] text-muted mb-1">
+904-                        Email Address
+905-                      </label>
+906:                      {isEditing ? (
+907-                        <input
+908-                          type="email"
+909-                          value={editedData.email || ""}
+910-                          onChange={(e) =>
+911-                            handleInputChange("email", e.target.value)
+--
+920-                    </div>
+921-                    <div className="flex flex-col">
+922-                      <label className="block text-[11px] text-muted mb-1">
+923-                        Club Affiliation
+924-                      </label>
+925:                      {isEditing ? (
+926-                        <input
+927-                          type="text"
+928-                          value={editedData.premierClub || ""}
+929-                          onChange={(e) =>
+930-                            handleInputChange("premierClub", e.target.value)
+--
+947-                    </div>
+948-                    <div className="flex flex-col">
+949-                      <label className="block text-[11px] text-muted mb-1">
+950-                        Dan
+951-                      </label>
+952:                      {isEditing ? (
+953-                        <input
+954-                          type="number"
+955-                          value={editedData.kukkiwonDan || ""}
+956-                          onChange={(e) =>
+957-                            handleInputChange("kukkiwonDan", parseInt(e.target.value) || 0)
+--
+966-                    </div>
+967-                    <div className="flex flex-col md:col-span-2">
+968-                      <label className="block text-[11px] text-muted mb-1">
+969-                        Home Address
+970-                      </label>
+971:                      {isEditing ? (
+972-                        <textarea
+973-                          value={editedData.address || ""}
+974-                          onChange={(e) =>
+975-                            handleInputChange("address", e.target.value)
+976-                          }
+--
+989-
+990-              {/* Seminar & Qualification History */}
+991-                <div className="bg-white border border-border rounded-lg p-5">
+992-                  <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+993-                    <span>Seminar & Qualification History</span>
+994:                    {isEditing && isAdminView && (
+995-                      <button
+996-                        onClick={() => {
+997-                          const newHistory = [
+998-                            ...(editedData.seminarHistory || []),
+999-                          ];
+--
+1026-                            Level
+1027-                          </th>
+1028-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+1029-                            Result
+1030-                          </th>
+1031:                          {isEditing && isAdminView && (
+1032-                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+1033-                          )}
+1034-                        </tr>
+1035-                      </thead>
+1036-                      <tbody>
+1037:                        {(isEditing
+1038-                          ? editedData.seminarHistory || []
+1039-                          : userData.seminarHistory || []
+1040-                        ).map((item: any, index: number) => (
+1041-                          <tr key={item.id || index}>
+1042-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1043:                              {isEditing && isAdminView ? (
+1044-                                <input
+1045-                                  className="w-full border-b border-primary focus:outline-none"
+1046-                                  value={item.year}
+1047-                                  onChange={(e) => {
+1048-                                    const newHistory = [
+--
+1059-                              ) : (
+1060-                                item.year
+1061-                              )}
+1062-                            </td>
+1063-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1064:                              {isEditing && isAdminView ? (
+1065-                                <input
+1066-                                  className="w-full border-b border-primary focus:outline-none"
+1067-                                  value={item.location}
+1068-                                  onChange={(e) => {
+1069-                                    const newHistory = [
+--
+1080-                              ) : (
+1081-                                item.location
+1082-                              )}
+1083-                            </td>
+1084-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1085:                              {isEditing && isAdminView ? (
+1086-                                <input
+1087-                                  className="w-full border-b border-primary focus:outline-none"
+1088-                                  value={item.level}
+1089-                                  onChange={(e) => {
+1090-                                    const newHistory = [
+--
+1101-                              ) : (
+1102-                                item.level
+1103-                              )}
+1104-                            </td>
+1105-                            <td className="p-2.5 px-2 text-[13px] border-b border-border flex items-center justify-between">
+1106:                              {isEditing && isAdminView ? (
+1107-                                <input
+1108-                                  className="w-full border-b border-primary focus:outline-none"
+1109-                                  value={item.result}
+1110-                                  onChange={(e) => {
+1111-                                    const newHistory = [
+--
+1131-                                >
+1132-                                  {item.result?.toUpperCase()}
+1133-                                </span>
+1134-                              )}
+1135-                            </td>
+1136:                            {isEditing && isAdminView && (
+1137-                              <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+1138-                                <button
+1139-                                  onClick={() => {
+1140-                                    const newHistory =
+1141-                                      editedData.seminarHistory.filter(
+--
+1154-                            )}
+1155-                          </tr>
+1156-                        ))}
+1157-                        {(!userData.seminarHistory ||
+1158-                          userData.seminarHistory.length === 0) &&
+1159:                          !isEditing && (
+1160-                            <tr>
+1161-                              <td
+1162-                                colSpan={4}
+1163-                                className="p-4 text-center text-muted text-[13px] border-b border-border"
+1164-                              >
+--
+1173-              </div>
+1174-            </div>
+1175-          )}
+1176-
+1177-          {activeTab === "id_card" && (
+1178:            <div className={`grid grid-cols-1 ${isEditing && isAdminView ? "lg:grid-cols-[340px_1fr]" : ""} gap-8 h-full bg-white border border-border rounded-lg p-10 mt-1`}>
+1179-              {/* Left Column (Editor) */}
+1180:              {isEditing && isAdminView && (
+1181-                <div className="flex flex-col gap-4">
+1182-                  {/* Digital ID Cards Form UI */}
+1183-                  <div className="w-[340px] h-[480px] bg-card rounded-2xl relative overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.1)] border border-border flex flex-col">
+1184-                    <div className="pt-6 pb-14 bg-[#F8FAFC] flex flex-col items-center justify-center text-center relative border-b-[3px] border-primary">
+1185-                      <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_top,black_10%,transparent_80%)]"></div>
+--
+1412-
+1413-          {activeTab === "experience" && (
+1414-            <div className="bg-white border border-border rounded-lg p-5">
+1415-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+1416-                <span>Kyorugi Experience</span>
+1417:                {isEditing && (
+1418-                  <button
+1419-                    onClick={() => {
+1420-                      const newExp = [...(editedData.experienceHistory || [])];
+1421-                      newExp.push({
+1422-                        id: Date.now().toString(),
+--
+1448-                        Location
+1449-                      </th>
+1450-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+1451-                        Role / Responsibility
+1452-                      </th>
+1453:                      {isEditing && (
+1454-                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+1455-                      )}
+1456-                    </tr>
+1457-                  </thead>
+1458-                  <tbody>
+1459:                    {(isEditing
+1460-                      ? editedData.experienceHistory || []
+1461-                      : userData.experienceHistory || []
+1462-                    ).map((item: any, index: number) => (
+1463-                      <tr key={item.id || index}>
+1464-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1465:                          {isEditing ? (
+1466-                            <input
+1467-                              className="w-full border-b border-primary focus:outline-none"
+1468-                              value={item.year}
+1469-                              onChange={(e) => {
+1470-                                const newExp = [
+--
+1478-                          ) : (
+1479-                            item.year
+1480-                          )}
+1481-                        </td>
+1482-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1483:                          {isEditing ? (
+1484-                            <input
+1485-                              className="w-full border-b border-primary focus:outline-none"
+1486-                              value={item.eventName}
+1487-                              onChange={(e) => {
+1488-                                const newExp = [
+--
+1496-                          ) : (
+1497-                            item.eventName
+1498-                          )}
+1499-                        </td>
+1500-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1501:                          {isEditing ? (
+1502-                            <input
+1503-                              className="w-full border-b border-primary focus:outline-none"
+1504-                              value={item.location}
+1505-                              onChange={(e) => {
+1506-                                const newExp = [
+--
+1514-                          ) : (
+1515-                            item.location
+1516-                          )}
+1517-                        </td>
+1518-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1519:                          {isEditing ? (
+1520-                            <input
+1521-                              className="w-full border-b border-primary focus:outline-none"
+1522-                              value={item.role}
+1523-                              onChange={(e) => {
+1524-                                const newExp = [
+--
+1531-                            />
+1532-                          ) : (
+1533-                            item.role
+1534-                          )}
+1535-                        </td>
+1536:                        {isEditing && (
+1537-                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+1538-                            <button
+1539-                              onClick={() => {
+1540-                                const newExp =
+1541-                                  editedData.experienceHistory.filter(
+--
+1551-                        )}
+1552-                      </tr>
+1553-                    ))}
+1554-                    {(!userData.experienceHistory ||
+1555-                      userData.experienceHistory.length === 0) &&
+1556:                      !isEditing && (
+1557-                        <tr>
+1558-                          <td
+1559-                            colSpan={4}
+1560-                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+1561-                          >
+--
+1571-
+1572-          {activeTab === "poomsae_experience" && (
+1573-            <div className="bg-white border border-border rounded-lg p-5">
+1574-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+1575-                <span>Poomsae Experience</span>
+1576:                {isEditing && (
+1577-                  <button
+1578-                    onClick={() => {
+1579-                      const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+1580-                      newExp.push({
+1581-                        id: Date.now().toString(),
+--
+1607-                        Location
+1608-                      </th>
+1609-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+1610-                        Role / Responsibility
+1611-                      </th>
+1612:                      {isEditing && (
+1613-                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+1614-                      )}
+1615-                    </tr>
+1616-                  </thead>
+1617-                  <tbody>
+1618:                    {(isEditing
+1619-                      ? editedData.poomsaeExperienceHistory || []
+1620-                      : userData.poomsaeExperienceHistory || []
+1621-                    ).map((item: any, index: number) => (
+1622-                      <tr key={item.id || index}>
+1623-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1624:                          {isEditing ? (
+1625-                            <input
+1626-                              className="w-full border-b border-primary focus:outline-none"
+1627-                              value={item.year}
+1628-                              onChange={(e) => {
+1629-                                const newExp = [
+--
+1637-                          ) : (
+1638-                            item.year
+1639-                          )}
+1640-                        </td>
+1641-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1642:                          {isEditing ? (
+1643-                            <input
+1644-                              className="w-full border-b border-primary focus:outline-none"
+1645-                              value={item.eventName}
+1646-                              onChange={(e) => {
+1647-                                const newExp = [
+--
+1655-                          ) : (
+1656-                            item.eventName
+1657-                          )}
+1658-                        </td>
+1659-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1660:                          {isEditing ? (
+1661-                            <input
+1662-                              className="w-full border-b border-primary focus:outline-none"
+1663-                              value={item.location}
+1664-                              onChange={(e) => {
+1665-                                const newExp = [
+--
+1673-                          ) : (
+1674-                            item.location
+1675-                          )}
+1676-                        </td>
+1677-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1678:                          {isEditing ? (
+1679-                            <input
+1680-                              className="w-full border-b border-primary focus:outline-none"
+1681-                              value={item.role}
+1682-                              onChange={(e) => {
+1683-                                const newExp = [
+--
+1690-                            />
+1691-                          ) : (
+1692-                            item.role
+1693-                          )}
+1694-                        </td>
+1695:                        {isEditing && (
+1696-                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+1697-                            <button
+1698-                              onClick={() => {
+1699-                                const newExp =
+1700-                                  editedData.poomsaeExperienceHistory.filter(
+--
+1710-                        )}
+1711-                      </tr>
+1712-                    ))}
+1713-                    {(!userData.poomsaeExperienceHistory ||
+1714-                      userData.poomsaeExperienceHistory.length === 0) &&
+1715:                      !isEditing && (
+1716-                        <tr>
+1717-                          <td
+1718-                            colSpan={4}
+1719-                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+1720-                          >
+--
+1730-
+1731-          {activeTab === "annual_fee" && (
+1732-            <div className="bg-white border border-border rounded-lg p-5">
+1733-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+1734-                <span>Annual Fee History</span>
+1735:                {isEditing && isAdminView && (
+1736-                  <button
+1737-                    onClick={() => {
+1738-                      const newFees = [...(editedData.annualFeeHistory || [])];
+1739-                      newFees.push({
+1740-                        id: Date.now().toString(),
+--
+1766-                        Amount
+1767-                      </th>
+1768-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+1769-                        Receipt No.
+1770-                      </th>
+1771:                      {isEditing && isAdminView && (
+1772-                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+1773-                      )}
+1774-                    </tr>
+1775-                  </thead>
+1776-                  <tbody>
+1777:                    {(isEditing
+1778-                      ? editedData.annualFeeHistory || []
+1779-                      : userData.annualFeeHistory || []
+1780-                    ).map((item: any, index: number) => (
+1781-                      <tr key={item.id || index}>
+1782-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1783:                          {isEditing && isAdminView ? (
+1784-                            <input
+1785-                              className="w-full border-b border-primary focus:outline-none"
+1786-                              value={item.year}
+1787-                              onChange={(e) => {
+1788-                                const newFees = [
+--
+1796-                          ) : (
+1797-                            item.year
+1798-                          )}
+1799-                        </td>
+1800-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1801:                          {isEditing && isAdminView ? (
+1802-                            <input
+1803-                              className="w-full border-b border-primary focus:outline-none"
+1804-                              type="date"
+1805-                              value={item.datePaid}
+1806-                              onChange={(e) => {
+--
+1814-                          ) : (
+1815-                            item.datePaid
+1816-                          )}
+1817-                        </td>
+1818-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1819:                          {isEditing && isAdminView ? (
+1820-                            <input
+1821-                              className="w-full border-b border-primary focus:outline-none"
+1822-                              value={item.amount}
+1823-                              onChange={(e) => {
+1824-                                const newFees = [
+--
+1832-                          ) : (
+1833-                            item.amount
+1834-                          )}
+1835-                        </td>
+1836-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1837:                          {isEditing && isAdminView ? (
+1838-                            <input
+1839-                              className="w-full border-b border-primary focus:outline-none"
+1840-                              value={item.receiptNo}
+1841-                              onChange={(e) => {
+1842-                                const newFees = [
+--
+1849-                            />
+1850-                          ) : (
+1851-                            item.receiptNo
+1852-                          )}
+1853-                        </td>
+1854:                        {isEditing && isAdminView && (
+1855-                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+1856-                            <button
+1857-                              onClick={() => {
+1858-                                const newFees =
+1859-                                  editedData.annualFeeHistory.filter(
+--
+1869-                        )}
+1870-                      </tr>
+1871-                    ))}
+1872-                    {(!userData.annualFeeHistory ||
+1873-                      userData.annualFeeHistory.length === 0) &&
+1874:                      !isEditing && (
+1875-                        <tr>
+1876-                          <td
+1877-                            colSpan={4}
+1878-                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+1879-                          >
+--
+1889-
+1890-          {activeTab === "promotion" && (
+1891-            <div className="bg-white border border-border rounded-lg p-5">
+1892-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+1893-                <span>Promotion History</span>
+1894:                {isEditing && isAdminView && (
+1895-                  <button
+1896-                    onClick={() => {
+1897-                      const newPromotions = [
+1898-                        ...(editedData.promotionHistory || []),
+1899-                      ];
+--
+1927-                        Level Achieved
+1928-                      </th>
+1929-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+1930-                        Remarks
+1931-                      </th>
+1932:                      {isEditing && isAdminView && (
+1933-                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+1934-                      )}
+1935-                    </tr>
+1936-                  </thead>
+1937-                  <tbody>
+1938:                    {(isEditing
+1939-                      ? editedData.promotionHistory || []
+1940-                      : userData.promotionHistory || []
+1941-                    ).map((item: any, index: number) => (
+1942-                      <tr key={item.id || index}>
+1943-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1944:                          {isEditing && isAdminView ? (
+1945-                            <input
+1946-                              className="w-full border-b border-primary focus:outline-none"
+1947-                              type="date"
+1948-                              value={item.date}
+1949-                              onChange={(e) => {
+--
+1960-                          ) : (
+1961-                            item.date
+1962-                          )}
+1963-                        </td>
+1964-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1965:                          {isEditing && isAdminView ? (
+1966-                            <select
+1967-                              className="w-full border-b border-primary focus:outline-none bg-transparent"
+1968-                              value={item.category}
+1969-                              onChange={(e) => {
+1970-                                const newPromotions = [
+--
+1984-                          ) : (
+1985-                            item.category
+1986-                          )}
+1987-                        </td>
+1988-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+1989:                          {isEditing && isAdminView ? (
+1990-                            <input
+1991-                              className="w-full border-b border-primary focus:outline-none"
+1992-                              value={item.levelAchieved}
+1993-                              onChange={(e) => {
+1994-                                const newPromotions = [
+--
+2006-                          ) : (
+2007-                            item.levelAchieved
+2008-                          )}
+2009-                        </td>
+2010-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2011:                          {isEditing && isAdminView ? (
+2012-                            <input
+2013-                              className="w-full border-b border-primary focus:outline-none"
+2014-                              value={item.remarks}
+2015-                              onChange={(e) => {
+2016-                                const newPromotions = [
+--
+2026-                            />
+2027-                          ) : (
+2028-                            item.remarks
+2029-                          )}
+2030-                        </td>
+2031:                        {isEditing && isAdminView && (
+2032-                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+2033-                            <button
+2034-                              onClick={() => {
+2035-                                const newPromotions =
+2036-                                  editedData.promotionHistory.filter(
+--
+2049-                        )}
+2050-                      </tr>
+2051-                    ))}
+2052-                    {(!userData.promotionHistory ||
+2053-                      userData.promotionHistory.length === 0) &&
+2054:                      !isEditing && (
+2055-                        <tr>
+2056-                          <td
+2057-                            colSpan={4}
+2058-                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+2059-                          >
+--
+2069-
+2070-          {activeTab === "evaluations" && isAdminView && (
+2071-            <div className="bg-white border border-border rounded-lg p-5">
+2072-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+2073-                <span>Referee Evaluations</span>
+2074:                {isEditing && isAdminView && (
+2075-                  <button
+2076-                    onClick={() => {
+2077-                      const newEvals = [...(editedData.evaluations || [])];
+2078-                      newEvals.push({
+2079-                        id: Date.now().toString(),
+--
+2114-                        Rating
+2115-                      </th>
+2116-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border min-w-[180px]">
+2117-                        Recommendation & Comments
+2118-                      </th>
+2119:                      {isEditing && isAdminView && (
+2120-                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-[40px]"></th>
+2121-                      )}
+2122-                    </tr>
+2123-                  </thead>
+2124-                  <tbody>
+2125:                    {(isEditing
+2126-                      ? editedData.evaluations || []
+2127-                      : userData.evaluations || []
+2128-                    ).map((item: any, index: number) => (
+2129-                      <tr key={item.id || index} className="align-top">
+2130-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2131:                          {isEditing && isAdminView ? (
+2132-                            <input
+2133-                              type="date"
+2134-                              className="w-full border-b border-primary focus:outline-none"
+2135-                              value={item.date}
+2136-                              onChange={(e) => {
+--
+2142-                          ) : (
+2143-                            item.date
+2144-                          )}
+2145-                        </td>
+2146-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2147:                          {isEditing && isAdminView ? (
+2148-                            <input
+2149-                              className="w-full border-b border-primary focus:outline-none"
+2150-                              value={item.venue}
+2151-                              onChange={(e) => {
+2152-                                const newEvals = [...editedData.evaluations];
+--
+2158-                          ) : (
+2159-                            item.venue
+2160-                          )}
+2161-                        </td>
+2162-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2163:                          {isEditing && isAdminView ? (
+2164-                            <input
+2165-                              className="w-full border-b border-primary focus:outline-none"
+2166-                              value={item.evaluator}
+2167-                              onChange={(e) => {
+2168-                                const newEvals = [...editedData.evaluations];
+--
+2174-                          ) : (
+2175-                            item.evaluator
+2176-                          )}
+2177-                        </td>
+2178-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2179:                          {isEditing && isAdminView ? (
+2180-                            <input
+2181-                              type="number"
+2182-                              className="w-full border-b border-primary focus:outline-none"
+2183-                              value={item.totalScore}
+2184-                              onChange={(e) => {
+--
+2191-                          ) : (
+2192-                            <span className="font-bold">{item.totalScore ? `${item.totalScore}/50` : ''}</span>
+2193-                          )}
+2194-                        </td>
+2195-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2196:                          {isEditing && isAdminView ? (
+2197-                            <select
+2198-                              className="w-full border-b border-primary focus:outline-none bg-white text-[13px]"
+2199-                              value={item.rating}
+2200-                              onChange={(e) => {
+2201-                                const newEvals = [...editedData.evaluations];
+--
+2214-                              {item.rating?.split(' (')[0]}
+2215-                            </span>
+2216-                          )}
+2217-                        </td>
+2218-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2219:                          {isEditing && isAdminView ? (
+2220-                            <div className="flex flex-col gap-2">
+2221-                              <select
+2222-                                className="w-full border-b border-primary focus:outline-none bg-white text-[13px]"
+2223-                                value={item.recommendation}
+2224-                                onChange={(e) => {
+--
+2255-                                <div className="text-muted italic">"{item.comments}"</div>
+2256-                              )}
+2257-                            </div>
+2258-                          )}
+2259-                        </td>
+2260:                        {isEditing && isAdminView && (
+2261-                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right align-middle">
+2262-                            <button
+2263-                              onClick={() => {
+2264-                                const newEvals = editedData.evaluations.filter(
+2265-                                  (_: any, i: number) => i !== index,
+--
+2274-                        )}
+2275-                      </tr>
+2276-                    ))}
+2277-                    {(!userData.evaluations ||
+2278-                      userData.evaluations.length === 0) &&
+2279:                      !isEditing && (
+2280-                        <tr>
+2281-                          <td
+2282-                            colSpan={6}
+2283-                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+2284-                          >
+--
+2294-
+2295-          {activeTab === "ban" && isAdminView && (
+2296-            <div className="bg-white border border-border rounded-lg p-5">
+2297-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+2298-                <span className="text-red-600">Ban History</span>
+2299:                {isAdminView && isEditing && (
+2300-                  <button
+2301-                    onClick={() => {
+2302-                      const newBans = [...(editedData.banHistory || [])];
+2303-                      newBans.push({
+2304-                        id: Date.now().toString(),
+--
+2330-                        Duration
+2331-                      </th>
+2332-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+2333-                        Status
+2334-                      </th>
+2335:                      {isEditing && isAdminView && (
+2336-                        <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
+2337-                      )}
+2338-                    </tr>
+2339-                  </thead>
+2340-                  <tbody>
+2341:                    {(isEditing
+2342-                      ? editedData.banHistory || []
+2343-                      : userData.banHistory || []
+2344-                    ).map((item: any, index: number) => (
+2345-                      <tr key={item.id || index}>
+2346-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2347:                          {isEditing && isAdminView ? (
+2348-                            <input
+2349-                              className="w-full border-b border-primary focus:outline-none"
+2350-                              type="date"
+2351-                              value={item.date}
+2352-                              onChange={(e) => {
+--
+2358-                          ) : (
+2359-                            item.date
+2360-                          )}
+2361-                        </td>
+2362-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2363:                          {isEditing && isAdminView ? (
+2364-                            <input
+2365-                              className="w-full border-b border-primary focus:outline-none"
+2366-                              value={item.reason}
+2367-                              onChange={(e) => {
+2368-                                const newBans = [...editedData.banHistory];
+--
+2374-                          ) : (
+2375-                            item.reason
+2376-                          )}
+2377-                        </td>
+2378-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2379:                          {isEditing && isAdminView ? (
+2380-                            <input
+2381-                              className="w-full border-b border-primary focus:outline-none"
+2382-                              value={item.duration}
+2383-                              onChange={(e) => {
+2384-                                const newBans = [...editedData.banHistory];
+--
+2390-                          ) : (
+2391-                            item.duration
+2392-                          )}
+2393-                        </td>
+2394-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+2395:                          {isEditing && isAdminView ? (
+2396-                            <select
+2397-                              className="w-full border-b border-primary focus:outline-none bg-transparent"
+2398-                              value={item.status}
+2399-                              onChange={(e) => {
+2400-                                const newBans = [...editedData.banHistory];
+--
+2412-                            >
+2413-                              {item.status}
+2414-                            </span>
+2415-                          )}
+2416-                        </td>
+2417:                        {isEditing && isAdminView && (
+2418-                          <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+2419-                            <button
+2420-                              onClick={() => {
+2421-                                const newBans = editedData.banHistory.filter(
+2422-                                  (_: any, i: number) => i !== index,
+--
+2431-                        )}
+2432-                      </tr>
+2433-                    ))}
+2434-                    {(!userData.banHistory ||
+2435-                      userData.banHistory.length === 0) &&
+2436:                      !isEditing && (
+2437-                        <tr>
+2438-                          <td
+2439-                            colSpan={4}
+2440-                            className="p-4 text-center text-muted text-[13px] border-b border-border"
+2441-                          >

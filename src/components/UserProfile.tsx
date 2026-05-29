@@ -108,6 +108,65 @@ const getRefereeLevelText = (level: string) => {
   return "REFEREE";
 };
 
+const parseExperienceDate = (dateStr: string | undefined | null): number => {
+  if (!dateStr) return 0;
+  const clean = dateStr.trim();
+  if (!clean) return 0;
+
+  // Try standard parsing
+  const parsed = Date.parse(clean);
+  if (!isNaN(parsed)) {
+    return parsed;
+  }
+
+  // Handle DD/MM/YYYY or DD-MM-YYYY
+  const ddmmyyyyMatch = clean.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})$/);
+  if (ddmmyyyyMatch) {
+    const day = parseInt(ddmmyyyyMatch[1], 10);
+    const month = parseInt(ddmmyyyyMatch[2], 10) - 1;
+    const year = parseInt(ddmmyyyyMatch[3], 10);
+    const d = new Date(year, month, day);
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+
+  // Handle MM/YYYY or MM-YYYY
+  const mmyyyyMatch = clean.match(/^(\d{1,2})[\/\.-](\d{4})$/);
+  if (mmyyyyMatch) {
+    const month = parseInt(mmyyyyMatch[1], 10) - 1;
+    const year = parseInt(mmyyyyMatch[2], 10);
+    const d = new Date(year, month, 1);
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+
+  // Handle plain 4-digit year
+  const yearMatch = clean.match(/^(\d{4})$/);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1], 10);
+    const d = new Date(year, 0, 1);
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+
+  // Look for any 4 digit year in the string
+  const extractYear = clean.match(/\b(\d{4})\b/);
+  if (extractYear) {
+    const year = parseInt(extractYear[1], 10);
+    // Look for month word
+    const tempLower = clean.toLowerCase();
+    const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    let monthIdx = 0;
+    for (let i = 0; i < months.length; i++) {
+      if (tempLower.includes(months[i])) {
+        monthIdx = i;
+        break;
+      }
+    }
+    const d = new Date(year, monthIdx, 1);
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+
+  return 0;
+};
+
 const RefereeCard = ({
   title,
   level,
@@ -546,7 +605,21 @@ export default function UserProfile({
 
     setSaveLoading(true);
     try {
-      await updateDoc(doc(db, "users", userId), editedData);
+      // Sort experience histories descending (latest date/year on top, older at bottom)
+      const sortedKyorugiExp = [...(editedData.experienceHistory || [])].sort((a, b) => {
+        return parseExperienceDate(b.year) - parseExperienceDate(a.year);
+      });
+      const sortedPoomsaeExp = [...(editedData.poomsaeExperienceHistory || [])].sort((a, b) => {
+        return parseExperienceDate(b.year) - parseExperienceDate(a.year);
+      });
+
+      const finalDataToSave = {
+        ...editedData,
+        experienceHistory: sortedKyorugiExp,
+        poomsaeExperienceHistory: sortedPoomsaeExp,
+      };
+
+      await updateDoc(doc(db, "users", userId), finalDataToSave);
 
       // Update mapping if TM ID changed
       if (
@@ -573,7 +646,8 @@ export default function UserProfile({
         });
       }
 
-      setUserData(editedData);
+      setUserData(finalDataToSave);
+      setEditedData(finalDataToSave);
       setIsEditing(false);
       alert("Details updated successfully!");
     } catch (error: any) {
@@ -1526,7 +1600,7 @@ export default function UserProfile({
                   <tbody>
                     {(isEditing
                       ? editedData.experienceHistory || []
-                      : userData.experienceHistory || []
+                      : [...(userData.experienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year))
                     ).map((item: any, index: number) => (
                       <tr key={item.id || index}>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
@@ -1761,7 +1835,7 @@ export default function UserProfile({
                   <tbody>
                     {(isEditing
                       ? editedData.poomsaeExperienceHistory || []
-                      : userData.poomsaeExperienceHistory || []
+                      : [...(userData.poomsaeExperienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year))
                     ).map((item: any, index: number) => (
                       <tr key={item.id || index}>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">

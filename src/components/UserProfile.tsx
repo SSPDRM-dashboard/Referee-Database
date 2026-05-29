@@ -189,7 +189,8 @@ const RefereeCard = ({
             src="https://ouhnnj8dinujboyi.public.blob.vercel-storage.com/logo.png"
             alt="TM Logo"
             crossOrigin="anonymous"
-            className="w-[150px] h-[150px] object-contain mb-[4px] drop-shadow-md"
+            className="w-[150px] h-[150px] object-contain mb-[4px]"
+            style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.8)) drop-shadow(0 0 2px rgba(255,255,255,0.8))" }}
           />
           <h2
             className="text-[34px] font-black tracking-[4px] uppercase m-0 leading-none mb-[12px]"

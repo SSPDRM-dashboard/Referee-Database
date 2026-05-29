@@ -18,6 +18,9 @@ export default function AdminDashboard() {
   const [newName, setNewName] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState('user');
+  const [newKyorugiLevel, setNewKyorugiLevel] = useState('TR');
+  const [newPoomsaeLevel, setNewPoomsaeLevel] = useState('TR');
+  const [newSerialNumber, setNewSerialNumber] = useState('');
   const [addError, setAddError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   
@@ -72,6 +75,18 @@ export default function AdminDashboard() {
     setNewName('');
     setNewPassword('');
     setNewRole('user');
+    setNewKyorugiLevel('TR');
+    setNewPoomsaeLevel('TR');
+    
+    let nextSerial = 1;
+    const existingSerials = users
+      .map(u => parseInt(u.refereeSerialNumber || "0", 10))
+      .filter(n => !isNaN(n));
+    if (existingSerials.length > 0) {
+      nextSerial = Math.max(...existingSerials) + 1;
+    }
+    setNewSerialNumber(nextSerial.toString().padStart(4, '0'));
+    
     setIsModalOpen(true);
   };
 
@@ -114,8 +129,9 @@ export default function AdminDashboard() {
         createdAt: new Date().toISOString(),
         phoneNumber: '',
         kukkiwonDan: '',
-        kyorugiRefereeLevel: 'TR',
-        poomsaeRefereeLevel: 'TR',
+        kyorugiRefereeLevel: newKyorugiLevel,
+        poomsaeRefereeLevel: newPoomsaeLevel,
+        refereeSerialNumber: newSerialNumber,
         licenseExpiry: '',
         address: '',
         premierClub: '',
@@ -358,6 +374,18 @@ export default function AdminDashboard() {
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Referee Serial Number</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. 0001" 
+                  value={newSerialNumber}
+                  onChange={(e) => setNewSerialNumber(e.target.value)}
+                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">IC Number</label>
                 <input 
                   type="text" 
@@ -391,6 +419,45 @@ export default function AdminDashboard() {
                   <option value="user">Referee (Standard User)</option>
                   <option value="admin">Administrator (Admin Dashboard Access)</option>
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Kyorugi Level</label>
+                  <select 
+                    value={newKyorugiLevel}
+                    onChange={(e) => setNewKyorugiLevel(e.target.value)}
+                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
+                  >
+                    <option value="NIL">NIL</option>
+                    <option value="TR">TR</option>
+                    <option value="SR">SR</option>
+                    <option value="NR">NR</option>
+                    <option value="IRS">IRS</option>
+                    <option value="IR3">IR3</option>
+                    <option value="IR2">IR2</option>
+                    <option value="IR1">IR1</option>
+                    <option value="IR">IR</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Poomsae Level</label>
+                  <select 
+                    value={newPoomsaeLevel}
+                    onChange={(e) => setNewPoomsaeLevel(e.target.value)}
+                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
+                  >
+                    <option value="NIL">NIL</option>
+                    <option value="TR">TR</option>
+                    <option value="SR">SR</option>
+                    <option value="NR">NR</option>
+                    <option value="IRS">IRS</option>
+                    <option value="IR3">IR3</option>
+                    <option value="IR2">IR2</option>
+                    <option value="IR1">IR1</option>
+                    <option value="IR">IR</option>
+                  </select>
+                </div>
               </div>
 
               <div>

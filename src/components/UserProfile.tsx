@@ -13,7 +13,7 @@ import {
   Download,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   doc,
   getDoc,
@@ -82,6 +82,19 @@ const generateIdStr = (userData: any) => {
   
   parts.push(userData?.refereeSerialNumber || "0001");
   return parts.join("-");
+};
+
+const getLevelFullName = (level: string) => {
+  if (!level || level === "NIL") return "NIL";
+  if (level === "TR") return "Technical Referee";
+  if (level === "SR") return "State Referee";
+  if (level === "NR") return "National Referee";
+  if (level === "IRS") return "International Referee Class S";
+  if (level === "IR3") return "International Referee Class 3";
+  if (level === "IR2") return "International Referee Class 2";
+  if (level === "IR1") return "International Referee Class 1";
+  if (level === "IR") return "International Referee";
+  return level;
 };
 
 const getRefereeLevelText = (level: string) => {
@@ -299,6 +312,7 @@ export default function UserProfile({
 }) {
   const { id } = useParams(); // Only used if isAdminView is true
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [activeTab, setActiveTab] = useState("personal");
   const [userData, setUserData] = useState<any>(null);
@@ -306,6 +320,14 @@ export default function UserProfile({
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   const [photoForCrop, setPhotoForCrop] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -970,7 +992,7 @@ export default function UserProfile({
                               </select>
                             ) : (
                               <p className="m-0 font-semibold text-[14px]">
-                                {userData.kyorugiRefereeLevel || "N/A"}
+                                {getLevelFullName(userData.kyorugiRefereeLevel) || "N/A"}
                               </p>
                             )}
                           </div>
@@ -999,7 +1021,7 @@ export default function UserProfile({
                               </select>
                             ) : (
                               <p className="m-0 font-semibold text-[14px]">
-                                {userData.poomsaeRefereeLevel || "N/A"}
+                                {getLevelFullName(userData.poomsaeRefereeLevel) || "N/A"}
                               </p>
                             )}
                           </div>
@@ -1762,7 +1784,6 @@ export default function UserProfile({
                         year: "",
                         datePaid: "",
                         amount: "",
-                        receiptNo: "",
                       });
                       handleInputChange("annualFeeHistory", newFees);
                     }}
@@ -1785,9 +1806,6 @@ export default function UserProfile({
                       </th>
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Amount
-                      </th>
-                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                        Receipt No.
                       </th>
                       {isEditing && isAdminView && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
@@ -1854,24 +1872,6 @@ export default function UserProfile({
                             item.amount
                           )}
                         </td>
-                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                          {isEditing && isAdminView ? (
-                            <input
-                              className="w-full border-b border-primary focus:outline-none"
-                              value={item.receiptNo}
-                              onChange={(e) => {
-                                const newFees = [
-                                  ...editedData.annualFeeHistory,
-                                ];
-                                newFees[index].receiptNo = e.target.value;
-                                handleInputChange("annualFeeHistory", newFees);
-                              }}
-                              placeholder="Receipt No"
-                            />
-                          ) : (
-                            item.receiptNo
-                          )}
-                        </td>
                         {isEditing && isAdminView && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
@@ -1895,7 +1895,7 @@ export default function UserProfile({
                       !isEditing && (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={3}
                             className="p-4 text-center text-muted text-[13px] border-b border-border"
                           >
                             No fee records found.

@@ -6,6 +6,7 @@ import { UserPlus, Users, LogOut, X, Trash2, Plus } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
 
 export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState('referees');
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -232,9 +233,19 @@ export default function AdminDashboard() {
           </div>
         </div>
         <nav className="flex-1 p-4 flex flex-col gap-2">
-          <button className="flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors bg-primary text-white">
+          <button 
+            onClick={() => setActiveTab('referees')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'referees' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
+          >
             <Users size={18} />
             All Referees
+          </button>
+          <button 
+            onClick={() => setActiveTab('fees')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'fees' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Annual Fees
           </button>
         </nav>
         <div className="p-4 border-t border-border">
@@ -248,7 +259,7 @@ export default function AdminDashboard() {
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b-2 border-primary mb-6 gap-4">
-            <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">Referee Directory</h1>
+            <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">{activeTab === 'referees' ? 'Referee Directory' : 'Annual Fees Tracking'}</h1>
             <div className="flex flex-1 w-full md:w-auto md:max-w-md gap-2">
               <div className="relative flex-1">
                 <input
@@ -276,7 +287,7 @@ export default function AdminDashboard() {
 
           {loading ? (
             <p>Loading...</p>
-          ) : (
+          ) : activeTab === 'referees' ? (
             <div className="bg-white border border-border rounded-lg overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -331,7 +342,7 @@ export default function AdminDashboard() {
                   ))}
                   {filteredUsers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-muted">
+                      <td colSpan={7} className="p-8 text-center text-muted">
                         {users.length === 0 ? "No users found." : "No results match your search."}
                       </td>
                     </tr>
@@ -339,7 +350,60 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-          )}
+          ) : activeTab === 'fees' ? (
+            <div className="bg-white border border-border rounded-lg overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-border">
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Name</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Referee ID</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Last Paid Year</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map(user => {
+                    const fees = user.annualFeeHistory || [];
+                    const maxYear = fees.length ? Math.max(...fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y))) : 0;
+                    const lastYearPaid = maxYear > 0 ? maxYear.toString() : 'N/A';
+                    const currentYear = new Date().getFullYear();
+                    const isPaidThisYear = maxYear === currentYear;
+                    
+                    return (
+                        <tr key={user.id} className="border-b border-border hover:bg-gray-50">
+                          <td className="p-4 font-semibold text-sm">{user.fullName || 'N/A'}</td>
+                          <td className="p-4 text-sm text-muted whitespace-nowrap">
+                            {user.tmMembershipId ? `${user.tmMembershipId}-K${user.kyorugiRefereeLevel || 'IR'}-P${user.poomsaeRefereeLevel || 'IR'}-${user.refereeSerialNumber || '0001'}` : 'N/A'}
+                          </td>
+                          <td className="p-4 text-sm font-semibold">{lastYearPaid}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${isPaidThisYear ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#FED7D7] text-[#9B2C2C]'}`}>
+                              {isPaidThisYear ? 'Paid' : 'Due'}
+                            </span>
+                          </td>
+                          <td className="p-4 flex items-center gap-4">
+                            <button 
+                              onClick={() => navigate(`/admin/user/${user.id}?tab=annual_fee`)}
+                              className="text-primary text-sm font-bold hover:underline"
+                            >
+                              View & Manage
+                            </button>
+                          </td>
+                        </tr>
+                    );
+                  })}
+                  {filteredUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-muted">
+                        No results match your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
         </div>
       </main>
 

@@ -28,7 +28,7 @@ service cloud.firestore {
     }
 
     function isValidUser(data) {
-      let allowedFields = ['uid', 'email', 'role', 'fullName', 'icNumber', 'tmMembershipId', 'gender', 'dateOfBirth', 'stateAssociation', 'premierClub', 'isActive', 'phoneNumber', 'kukkiwonDan', 'kyorugiRefereeLevel', 'poomsaeRefereeLevel', 'licenseExpiry', 'address', 'createdAt', 'seminarHistory', 'photoUrl', 'experienceHistory', 'refereeSerialNumber', 'lastAnnualFeeYear', 'annualFeeHistory', 'promotionHistory', 'banHistory'];
+      let allowedFields = ['uid', 'email', 'role', 'fullName', 'icNumber', 'tmMembershipId', 'gender', 'dateOfBirth', 'stateAssociation', 'premierClub', 'isActive', 'phoneNumber', 'kukkiwonDan', 'kyorugiRefereeLevel', 'poomsaeRefereeLevel', 'licenseExpiry', 'address', 'createdAt', 'seminarHistory', 'photoUrl', 'experienceHistory', 'refereeSerialNumber', 'lastAnnualFeeYear', 'annualFeeHistory', 'promotionHistory', 'banHistory', 'poomsaeExperienceHistory', 'evaluations'];
       return hasOnlyAllowedFields(allowedFields) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
              data.email is string && data.email.size() > 0 && data.email.size() < 100 &&

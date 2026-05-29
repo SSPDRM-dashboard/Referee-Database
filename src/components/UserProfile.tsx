@@ -551,9 +551,9 @@ export default function UserProfile({
       setUserData(editedData);
       setIsEditing(false);
       alert("Details updated successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
-      alert("Failed to update details.");
+      alert("Failed to update details: " + (error?.message || error));
     } finally {
       setSaveLoading(false);
     }
@@ -926,107 +926,104 @@ export default function UserProfile({
                           </p>
                         )}
                       </div>
-                      {isAdminView && (
-                        <>
-                          <div className="flex flex-col">
-                            <label className="block text-[11px] text-muted mb-1">
-                              TM Membership ID
-                            </label>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editedData.tmMembershipId || ""}
-                                onChange={(e) =>
-                                  handleInputChange("tmMembershipId", e.target.value)
-                                }
-                                className="font-semibold text-[14px] border-b border-primary focus:outline-none"
-                              />
-                            ) : (
-                              <p className="m-0 font-semibold text-[14px]">
-                                {userData.tmMembershipId || "N/A"}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex flex-col">
-                            <label className="block text-[11px] text-muted mb-1">
-                              Referee Serial Number
-                            </label>
-                            {isEditing ? (
-                              <input
-                                type="text"
-                                value={editedData.refereeSerialNumber || ""}
-                                onChange={(e) =>
-                                  handleInputChange("refereeSerialNumber", e.target.value)
-                                }
-                                disabled={!isAdminView}
-                                className="font-semibold text-[14px] border-b border-primary focus:outline-none"
-                              />
-                            ) : (
-                              <p className="m-0 font-semibold text-[14px]">
-                                {userData.refereeSerialNumber || "N/A"}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex flex-col">
-                            <label className="block text-[11px] text-muted mb-1">
-                              Kyorugi Referee Level
-                            </label>
-                            {isEditing ? (
-                              <select
-                                value={editedData.kyorugiRefereeLevel !== undefined ? editedData.kyorugiRefereeLevel : "IR"}
-                                onChange={(e) =>
-                                  handleInputChange("kyorugiRefereeLevel", e.target.value)
-                                }
-                                disabled={!isAdminView}
-                                className="font-semibold text-[14px] border-b border-primary focus:outline-none bg-white disabled:opacity-70"
-                              >
-                                <option value="NIL">NIL</option>
-                                <option value="TR">TR</option>
-                                <option value="SR">SR</option>
-                                <option value="NR">NR</option>
-                                <option value="IRS">IRS</option>
-                                <option value="IR3">IR3</option>
-                                <option value="IR2">IR2</option>
-                                <option value="IR1">IR1</option>
-                                <option value="IR">IR</option>
-                              </select>
-                            ) : (
-                              <p className="m-0 font-semibold text-[14px]">
-                                {getLevelFullName(userData.kyorugiRefereeLevel) || "N/A"}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex flex-col">
-                            <label className="block text-[11px] text-muted mb-1">
-                              Poomsae Referee Level
-                            </label>
-                            {isEditing ? (
-                              <select
-                                value={editedData.poomsaeRefereeLevel !== undefined ? editedData.poomsaeRefereeLevel : "IR"}
-                                onChange={(e) =>
-                                  handleInputChange("poomsaeRefereeLevel", e.target.value)
-                                }
-                                disabled={!isAdminView}
-                                className="font-semibold text-[14px] border-b border-primary focus:outline-none bg-white disabled:opacity-70"
-                              >
-                                <option value="NIL">NIL</option>
-                                <option value="TR">TR</option>
-                                <option value="SR">SR</option>
-                                <option value="NR">NR</option>
-                                <option value="IRS">IRS</option>
-                                <option value="IR3">IR3</option>
-                                <option value="IR2">IR2</option>
-                                <option value="IR1">IR1</option>
-                                <option value="IR">IR</option>
-                              </select>
-                            ) : (
-                              <p className="m-0 font-semibold text-[14px]">
-                                {getLevelFullName(userData.poomsaeRefereeLevel) || "N/A"}
-                              </p>
-                            )}
-                          </div>
-                        </>
-                      )}
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
+                          TM Membership ID
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editedData.tmMembershipId || ""}
+                            onChange={(e) =>
+                              handleInputChange("tmMembershipId", e.target.value)
+                            }
+                            disabled={!isAdminView}
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none disabled:opacity-70 disabled:border-transparent"
+                          />
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {userData.tmMembershipId || "N/A"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
+                          Referee Serial Number
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editedData.refereeSerialNumber || ""}
+                            onChange={(e) =>
+                              handleInputChange("refereeSerialNumber", e.target.value)
+                            }
+                            disabled={!isAdminView}
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none disabled:opacity-70 disabled:border-transparent"
+                          />
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {userData.refereeSerialNumber || "N/A"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
+                          Kyorugi Referee Level
+                        </label>
+                        {isEditing ? (
+                          <select
+                            value={editedData.kyorugiRefereeLevel !== undefined ? editedData.kyorugiRefereeLevel : "IR"}
+                            onChange={(e) =>
+                              handleInputChange("kyorugiRefereeLevel", e.target.value)
+                            }
+                            disabled={!isAdminView}
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none bg-white disabled:opacity-70 disabled:border-transparent"
+                          >
+                            <option value="NIL">NIL</option>
+                            <option value="TR">TR</option>
+                            <option value="SR">SR</option>
+                            <option value="NR">NR</option>
+                            <option value="IRS">IRS</option>
+                            <option value="IR3">IR3</option>
+                            <option value="IR2">IR2</option>
+                            <option value="IR1">IR1</option>
+                            <option value="IR">IR</option>
+                          </select>
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {getLevelFullName(userData.kyorugiRefereeLevel) || "N/A"}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="block text-[11px] text-muted mb-1">
+                          Poomsae Referee Level
+                        </label>
+                        {isEditing ? (
+                          <select
+                            value={editedData.poomsaeRefereeLevel !== undefined ? editedData.poomsaeRefereeLevel : "IR"}
+                            onChange={(e) =>
+                              handleInputChange("poomsaeRefereeLevel", e.target.value)
+                            }
+                            disabled={!isAdminView}
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none bg-white disabled:opacity-70 disabled:border-transparent"
+                          >
+                            <option value="NIL">NIL</option>
+                            <option value="TR">TR</option>
+                            <option value="SR">SR</option>
+                            <option value="NR">NR</option>
+                            <option value="IRS">IRS</option>
+                            <option value="IR3">IR3</option>
+                            <option value="IR2">IR2</option>
+                            <option value="IR1">IR1</option>
+                            <option value="IR">IR</option>
+                          </select>
+                        ) : (
+                          <p className="m-0 font-semibold text-[14px]">
+                            {getLevelFullName(userData.poomsaeRefereeLevel) || "N/A"}
+                          </p>
+                        )}
+                      </div>
                       <div className="flex flex-col">
                         <label className="block text-[11px] text-muted mb-1">
                           IC Number
@@ -1038,7 +1035,8 @@ export default function UserProfile({
                             onChange={(e) =>
                               handleInputChange("icNumber", e.target.value)
                             }
-                            className="font-semibold text-[14px] border-b border-primary focus:outline-none"
+                            disabled={!isAdminView}
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none disabled:opacity-70 disabled:border-transparent"
                           />
                         ) : (
                           <p className="m-0 font-semibold text-[14px]">

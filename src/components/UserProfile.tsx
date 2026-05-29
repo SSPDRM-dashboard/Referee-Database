@@ -11,6 +11,9 @@ import {
   ClipboardCheck,
   IdCard,
   Download,
+  Paperclip,
+  Upload,
+  X,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -86,7 +89,7 @@ const generateIdStr = (userData: any) => {
 
 const getLevelFullName = (level: string) => {
   if (!level || level === "NIL") return "NIL";
-  if (level === "TR") return "Technical Referee";
+  if (level === "TR") return "Trainee Referee";
   if (level === "SR") return "State Referee";
   if (level === "NR") return "National Referee";
   if (level === "IRS") return "International Referee Class S";
@@ -101,7 +104,7 @@ const getRefereeLevelText = (level: string) => {
   if (!level || level === "NIL") return "REFEREE";
   if (level.includes("IR")) return "INTERNATIONAL REFEREE";
   if (level.includes("SR") || level.includes("NR") || level.toUpperCase().includes("NATIONAL")) return "NATIONAL REFEREE";
-  if (level.includes("TR")) return "STATE REFEREE";
+  if (level.includes("TR")) return "TRAINEE REFEREE";
   return "REFEREE";
 };
 
@@ -320,6 +323,28 @@ export default function UserProfile({
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  const [selectedCertificateUrl, setSelectedCertificateUrl] = useState<string | null>(null);
+  const [selectedCertificateTitle, setSelectedCertificateTitle] = useState<string>("");
+
+  const downloadCertificate = (url: string, title: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    let extension = "png";
+    if (url.startsWith("data:application/pdf")) {
+      extension = "pdf";
+    } else if (url.startsWith("data:image/jpeg")) {
+      extension = "jpg";
+    } else if (url.startsWith("data:image/gif")) {
+      extension = "gif";
+    } else if (url.startsWith("data:image/svg")) {
+      extension = "svg";
+    }
+    link.download = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_certificate.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1035,8 +1060,7 @@ export default function UserProfile({
                             onChange={(e) =>
                               handleInputChange("icNumber", e.target.value)
                             }
-                            disabled={!isAdminView}
-                            className="font-semibold text-[14px] border-b border-primary focus:outline-none disabled:opacity-70 disabled:border-transparent"
+                            className="font-semibold text-[14px] border-b border-primary focus:outline-none"
                           />
                         ) : (
                           <p className="m-0 font-semibold text-[14px]">
@@ -1491,6 +1515,9 @@ export default function UserProfile({
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Role / Responsibility
                       </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
+                        Certificate
+                      </th>
                       {isEditing && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
                       )}
@@ -1574,6 +1601,79 @@ export default function UserProfile({
                             item.role
                           )}
                         </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2 flex-wrap min-h-[30px]">
+                              {item.certificateUrl ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedCertificateUrl(item.certificateUrl);
+                                      setSelectedCertificateTitle(item.eventName || "Kyorugi Experience Certificate");
+                                    }}
+                                    className="text-xs text-secondary font-bold hover:underline flex items-center gap-1 text-primary cursor-pointer"
+                                  >
+                                    <Paperclip size={14} /> View
+                                  </button>
+                                  {isAdminView && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (window.confirm("Are you sure you want to remove this certificate attachment?")) {
+                                          const newExp = [...editedData.experienceHistory];
+                                          delete newExp[index].certificateUrl;
+                                          handleInputChange("experienceHistory", newExp);
+                                        }
+                                      }}
+                                      className="text-red-500 hover:text-red-700 text-xs font-bold font-sans cursor-pointer whitespace-nowrap"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <label className="cursor-pointer text-xs text-primary font-bold hover:underline flex items-center gap-1 whitespace-nowrap">
+                                  <Upload size={14} /> Upload
+                                  <input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                          if (typeof event.target?.result === "string") {
+                                            const newExp = [...editedData.experienceHistory];
+                                            newExp[index].certificateUrl = event.target.result;
+                                            handleInputChange("experienceHistory", newExp);
+                                          }
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          ) : (
+                            item.certificateUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCertificateUrl(item.certificateUrl);
+                                  setSelectedCertificateTitle(item.eventName || "Kyorugi Experience Certificate");
+                                }}
+                                className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                              >
+                                <Paperclip size={14} /> View Certificate
+                              </button>
+                            ) : (
+                              <span className="text-muted text-xs">No Certificate</span>
+                            )
+                          )}
+                        </td>
                         {isEditing && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
@@ -1597,7 +1697,7 @@ export default function UserProfile({
                       !isEditing && (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={5}
                             className="p-4 text-center text-muted text-[13px] border-b border-border"
                           >
                             No experience uploaded yet.
@@ -1649,6 +1749,9 @@ export default function UserProfile({
                       </th>
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                         Role / Responsibility
+                      </th>
+                      <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
+                        Certificate
                       </th>
                       {isEditing && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
@@ -1733,6 +1836,79 @@ export default function UserProfile({
                             item.role
                           )}
                         </td>
+                        <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2 flex-wrap min-h-[30px]">
+                              {item.certificateUrl ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedCertificateUrl(item.certificateUrl);
+                                      setSelectedCertificateTitle(item.eventName || "Poomsae Experience Certificate");
+                                    }}
+                                    className="text-xs text-secondary font-bold hover:underline flex items-center gap-1 text-primary cursor-pointer"
+                                  >
+                                    <Paperclip size={14} /> View
+                                  </button>
+                                  {isAdminView && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (window.confirm("Are you sure you want to remove this certificate attachment?")) {
+                                          const newExp = [...editedData.poomsaeExperienceHistory];
+                                          delete newExp[index].certificateUrl;
+                                          handleInputChange("poomsaeExperienceHistory", newExp);
+                                        }
+                                      }}
+                                      className="text-red-500 hover:text-red-700 text-xs font-bold font-sans cursor-pointer whitespace-nowrap"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <label className="cursor-pointer text-xs text-primary font-bold hover:underline flex items-center gap-1 whitespace-nowrap">
+                                  <Upload size={14} /> Upload
+                                  <input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                          if (typeof event.target?.result === "string") {
+                                            const newExp = [...editedData.poomsaeExperienceHistory];
+                                            newExp[index].certificateUrl = event.target.result;
+                                            handleInputChange("poomsaeExperienceHistory", newExp);
+                                          }
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          ) : (
+                            item.certificateUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCertificateUrl(item.certificateUrl);
+                                  setSelectedCertificateTitle(item.eventName || "Poomsae Experience Certificate");
+                                }}
+                                className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                              >
+                                <Paperclip size={14} /> View Certificate
+                              </button>
+                            ) : (
+                              <span className="text-muted text-xs">No Certificate</span>
+                            )
+                          )}
+                        </td>
                         {isEditing && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
@@ -1756,7 +1932,7 @@ export default function UserProfile({
                       !isEditing && (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={5}
                             className="p-4 text-center text-muted text-[13px] border-b border-border"
                           >
                             No experience uploaded yet.
@@ -2705,6 +2881,69 @@ export default function UserProfile({
                 )}
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Certificate Viewer Modal */}
+      {selectedCertificateUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 transition-all duration-300">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-primary p-4 text-white flex justify-between items-center shrink-0">
+              <h3 className="font-bold tracking-tight m-0 flex items-center gap-2 text-base text-white">
+                <FileText size={18} />
+                {selectedCertificateTitle || "View Certificate"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCertificateUrl(null);
+                  setSelectedCertificateTitle("");
+                }}
+                className="text-white hover:text-gray-200 transition-colors p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-auto flex-1 flex flex-col items-center justify-center bg-gray-50 min-h-[300px]">
+              {selectedCertificateUrl.startsWith("data:application/pdf") ? (
+                <iframe
+                  src={selectedCertificateUrl}
+                  className="w-full h-[60vh] rounded border border-border shrink-0"
+                  title="PDF Certificate"
+                />
+              ) : (
+                <img
+                  src={selectedCertificateUrl}
+                  alt="Certificate Attachment"
+                  className="max-w-full max-h-[60vh] object-contain rounded border border-border bg-white shadow-sm"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+            </div>
+
+            <div className="p-4 border-t border-border flex justify-end gap-3 bg-white shrink-0">
+              <button
+                type="button"
+                onClick={() => downloadCertificate(selectedCertificateUrl, selectedCertificateTitle)}
+                className="bg-primary hover:bg-primary/95 text-white px-4 py-2 rounded text-sm font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Download size={16} />
+                Download
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCertificateUrl(null);
+                  setSelectedCertificateTitle("");
+                }}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm font-bold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

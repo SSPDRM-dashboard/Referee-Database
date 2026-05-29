@@ -122,7 +122,7 @@ export default function AdminDashboard() {
       const newUser = {
         uid: newUid,
         email: dummyEmail,
-        icNumber: newIC,
+        icNumber: newRole === 'admin' ? '' : newIC,
         tmMembershipId: newTMId,
         fullName: newName,
         role: newRole,
@@ -130,9 +130,9 @@ export default function AdminDashboard() {
         createdAt: new Date().toISOString(),
         phoneNumber: '',
         kukkiwonDan: '',
-        kyorugiRefereeLevel: newKyorugiLevel,
-        poomsaeRefereeLevel: newPoomsaeLevel,
-        refereeSerialNumber: newSerialNumber,
+        kyorugiRefereeLevel: newRole === 'admin' ? 'NIL' : newKyorugiLevel,
+        poomsaeRefereeLevel: newRole === 'admin' ? 'NIL' : newPoomsaeLevel,
+        refereeSerialNumber: newRole === 'admin' ? '' : newSerialNumber,
         licenseExpiry: '',
         address: '',
         premierClub: '',
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
       if (error.code === 'auth/operation-not-allowed') {
         setAddError("Email/Password sign-in is not enabled in Firebase Console. Please enable it.");
       } else if (error.code === 'auth/email-already-in-use') {
-        setAddError("A referee with this IC number already exists.");
+        setAddError("A user with this username/login ID already exists.");
       } else {
         setAddError("Failed to create user: " + error.message);
       }
@@ -308,35 +308,43 @@ export default function AdminDashboard() {
                       <td className="p-4 text-sm font-mono text-primary font-bold">{user.tmMembershipId || 'N/A'}</td>
                       <td className="p-4 text-xs text-muted italic">Hidden<br/><span className="text-[10px]">(Reset via Profile)</span></td>
                       <td className="p-4 text-sm text-muted whitespace-nowrap">
-                        {user.tmMembershipId ? `${user.tmMembershipId}-K${user.kyorugiRefereeLevel || 'IR'}-P${user.poomsaeRefereeLevel || 'IR'}-${user.refereeSerialNumber || '0001'}` : 'N/A'}
+                        {user.role === 'admin' ? '-' : (user.tmMembershipId ? `${user.tmMembershipId}-K${user.kyorugiRefereeLevel || 'IR'}-P${user.poomsaeRefereeLevel || 'IR'}-${user.refereeSerialNumber || '0001'}` : 'N/A')}
                       </td>
-                      <td className="p-4 text-sm text-muted">{user.icNumber || 'N/A'}</td>
+                      <td className="p-4 text-sm text-muted">
+                        {user.role === 'admin' ? '-' : (user.icNumber || 'N/A')}
+                      </td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${user.isActive ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-gray-200 text-gray-600'}`}>
                           {user.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="p-4 flex items-center gap-4">
-                        <button 
-                          onClick={() => navigate(`/admin/user/${user.id}`)}
-                          className="text-primary text-sm font-bold hover:underline"
-                        >
-                          View Profile
-                        </button>
-                        <button 
-                          onClick={() => handleOpenExpModal(user)}
-                          className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
-                        >
-                          <Plus size={14} />
-                          Add Exp
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.id, user.fullName || 'this user')}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                          title="Delete User"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {user.role === 'admin' ? (
+                          <span className="text-muted text-xs italic">No actions</span>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={() => navigate(`/admin/user/${user.id}`)}
+                              className="text-primary text-sm font-bold hover:underline"
+                            >
+                              View Profile
+                            </button>
+                            <button 
+                              onClick={() => handleOpenExpModal(user)}
+                              className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
+                            >
+                              <Plus size={14} />
+                              Add Exp
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.fullName || 'this user')}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              title="Delete User"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -363,7 +371,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map(user => {
+                  {filteredUsers.filter(user => user.role !== 'admin').map(user => {
                     const fees = user.annualFeeHistory || [];
                     const maxYear = fees.length ? Math.max(...fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y))) : 0;
                     const lastYearPaid = maxYear > 0 ? maxYear.toString() : 'N/A';
@@ -393,7 +401,7 @@ export default function AdminDashboard() {
                         </tr>
                     );
                   })}
-                  {filteredUsers.length === 0 && (
+                  {filteredUsers.filter(user => user.role !== 'admin').length === 0 && (
                     <tr>
                       <td colSpan={5} className="p-8 text-center text-muted">
                         No results match your search.
@@ -426,54 +434,6 @@ export default function AdminDashboard() {
               )}
               
               <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">TM Blackbelt ID</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. TM-12345" 
-                  value={newTMId}
-                  onChange={(e) => setNewTMId(e.target.value)}
-                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Referee Serial Number</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. 0001" 
-                  value={newSerialNumber}
-                  onChange={(e) => setNewSerialNumber(e.target.value)}
-                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">IC Number</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. 850101-14-5567" 
-                  value={newIC}
-                  onChange={(e) => setNewIC(e.target.value)}
-                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Full Name</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. AHMAD BIN ABDULLAH" 
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors uppercase"
-                  required
-                />
-              </div>
-              
-              <div>
                 <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Account Role</label>
                 <select 
                   value={newRole}
@@ -485,44 +445,100 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Kyorugi Level</label>
-                  <select 
-                    value={newKyorugiLevel}
-                    onChange={(e) => setNewKyorugiLevel(e.target.value)}
-                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
-                  >
-                    <option value="NIL">NIL</option>
-                    <option value="TR">TR</option>
-                    <option value="SR">SR</option>
-                    <option value="NR">NR</option>
-                    <option value="IRS">IRS</option>
-                    <option value="IR3">IR3</option>
-                    <option value="IR2">IR2</option>
-                    <option value="IR1">IR1</option>
-                    <option value="IR">IR</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Poomsae Level</label>
-                  <select 
-                    value={newPoomsaeLevel}
-                    onChange={(e) => setNewPoomsaeLevel(e.target.value)}
-                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
-                  >
-                    <option value="NIL">NIL</option>
-                    <option value="TR">TR</option>
-                    <option value="SR">SR</option>
-                    <option value="NR">NR</option>
-                    <option value="IRS">IRS</option>
-                    <option value="IR3">IR3</option>
-                    <option value="IR2">IR2</option>
-                    <option value="IR1">IR1</option>
-                    <option value="IR">IR</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">
+                  {newRole === 'admin' ? 'Admin Username / Login ID' : 'TM Blackbelt ID'}
+                </label>
+                <input 
+                  type="text" 
+                  placeholder={newRole === 'admin' ? 'e.g. admin123' : 'e.g. TM-12345'} 
+                  value={newTMId}
+                  onChange={(e) => setNewTMId(e.target.value)}
+                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  required
+                />
               </div>
+
+              {newRole !== 'admin' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Referee Serial Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 0001" 
+                      value={newSerialNumber}
+                      onChange={(e) => setNewSerialNumber(e.target.value)}
+                      className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">IC Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 850101-14-5567" 
+                      value={newIC}
+                      onChange={(e) => setNewIC(e.target.value)}
+                      className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+              
+              <div>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  placeholder={newRole === 'admin' ? 'e.g. LEO CHEN' : 'e.g. AHMAD BIN ABDULLAH'} 
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors uppercase"
+                  required
+                />
+              </div>
+
+              {newRole !== 'admin' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Kyorugi Level</label>
+                    <select 
+                      value={newKyorugiLevel}
+                      onChange={(e) => setNewKyorugiLevel(e.target.value)}
+                      className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
+                    >
+                      <option value="NIL">NIL</option>
+                      <option value="TR">TR</option>
+                      <option value="SR">SR</option>
+                      <option value="NR">NR</option>
+                      <option value="IRS">IRS</option>
+                      <option value="IR3">IR3</option>
+                      <option value="IR2">IR2</option>
+                      <option value="IR1">IR1</option>
+                      <option value="IR">IR</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Poomsae Level</label>
+                    <select 
+                      value={newPoomsaeLevel}
+                      onChange={(e) => setNewPoomsaeLevel(e.target.value)}
+                      className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors bg-white"
+                    >
+                      <option value="NIL">NIL</option>
+                      <option value="TR">TR</option>
+                      <option value="SR">SR</option>
+                      <option value="NR">NR</option>
+                      <option value="IRS">IRS</option>
+                      <option value="IR3">IR3</option>
+                      <option value="IR2">IR2</option>
+                      <option value="IR1">IR1</option>
+                      <option value="IR">IR</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Temporary Password</label>

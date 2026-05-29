@@ -1592,7 +1592,7 @@ export default function UserProfile({
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
                         Certificate
                       </th>
-                      {isEditing && (
+                      {isEditing && isAdminView && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
                       )}
                     </tr>
@@ -1748,15 +1748,17 @@ export default function UserProfile({
                             )
                           )}
                         </td>
-                        {isEditing && (
+                        {isEditing && isAdminView && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
                               onClick={() => {
-                                const newExp =
-                                  editedData.experienceHistory.filter(
-                                    (_: any, i: number) => i !== index,
-                                  );
-                                handleInputChange("experienceHistory", newExp);
+                                if (window.confirm("Are you sure you want to delete this experience record?")) {
+                                  const newExp =
+                                    editedData.experienceHistory.filter(
+                                      (_: any, i: number) => i !== index,
+                                    );
+                                  handleInputChange("experienceHistory", newExp);
+                                }
                               }}
                               className="text-red-500 font-bold"
                             >
@@ -1827,7 +1829,7 @@ export default function UserProfile({
                       <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
                         Certificate
                       </th>
-                      {isEditing && (
+                      {isEditing && isAdminView && (
                         <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
                       )}
                     </tr>
@@ -1983,15 +1985,17 @@ export default function UserProfile({
                             )
                           )}
                         </td>
-                        {isEditing && (
+                        {isEditing && isAdminView && (
                           <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
                             <button
                               onClick={() => {
-                                const newExp =
-                                  editedData.poomsaeExperienceHistory.filter(
-                                    (_: any, i: number) => i !== index,
-                                  );
-                                handleInputChange("poomsaeExperienceHistory", newExp);
+                                if (window.confirm("Are you sure you want to delete this experience record?")) {
+                                  const newExp =
+                                    editedData.poomsaeExperienceHistory.filter(
+                                      (_: any, i: number) => i !== index,
+                                    );
+                                  handleInputChange("poomsaeExperienceHistory", newExp);
+                                }
                               }}
                               className="text-red-500 font-bold"
                             >
@@ -2256,8 +2260,8 @@ export default function UserProfile({
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">
                           {isEditing && isAdminView ? (
-                            <input
-                              className="w-full border-b border-primary focus:outline-none"
+                            <select
+                              className="w-full border-b border-primary focus:outline-none bg-transparent"
                               value={item.levelAchieved}
                               onChange={(e) => {
                                 const newPromotions = [
@@ -2270,10 +2274,20 @@ export default function UserProfile({
                                   newPromotions,
                                 );
                               }}
-                              placeholder="e.g. IR 1st Class"
-                            />
+                            >
+                              <option value="">Select Level</option>
+                              <option value="NIL">NIL</option>
+                              <option value="TR">TR (Trainee Referee)</option>
+                              <option value="SR">SR (State Referee)</option>
+                              <option value="NR">NR (National Referee)</option>
+                              <option value="IRS">IRS (International Referee Class S)</option>
+                              <option value="IR3">IR3 (International Referee Class 3)</option>
+                              <option value="IR2">IR2 (International Referee Class 2)</option>
+                              <option value="IR1">IR1 (International Referee Class 1)</option>
+                              <option value="IR">IR (International Referee)</option>
+                            </select>
                           ) : (
-                            item.levelAchieved
+                            getLevelFullName(item.levelAchieved) || "N/A"
                           )}
                         </td>
                         <td className="p-2.5 px-2 text-[13px] border-b border-border">

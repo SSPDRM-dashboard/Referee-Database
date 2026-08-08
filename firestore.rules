@@ -13,7 +13,7 @@ service cloud.firestore {
     
     function isAdmin() {
       return isAuthenticated() && (
-        (request.auth.token.email == "anak2nsky@gmail.com" && request.auth.token.email_verified == true) ||
+        request.auth.token.email == "anak2nsky@gmail.com" ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
@@ -46,10 +46,7 @@ service cloud.firestore {
     }
 
     match /championship_attendances/{docId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, create, update, delete: if true;
     }
 
     match /users/{userId} {

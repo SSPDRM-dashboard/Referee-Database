@@ -119,6 +119,11 @@ export default function ChampionshipAttendance({
     null
   );
 
+  // Deletion and Verification action states
+  const [recordToDelete, setRecordToDelete] = useState<ChampionshipAttendanceRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
   // Experience Sync status state
   const [syncingId, setSyncingId] = useState<string | null>(null);
 
@@ -272,33 +277,37 @@ export default function ChampionshipAttendance({
     }
   };
 
-  const handleDeleteRecord = async (id: string, name: string) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete the attendance record for "${name}"?`
-      )
-    ) {
-      try {
-        await deleteDoc(doc(db, "championship_attendances", id));
-        setRecords(records.filter((r) => r.id !== id));
-      } catch (err: any) {
-        alert("Failed to delete record: " + err.message);
-      }
+  const handleConfirmDeleteRecord = async () => {
+    if (!recordToDelete || !recordToDelete.id) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(db, "championship_attendances", recordToDelete.id));
+      setRecords((prev) => prev.filter((r) => r.id !== recordToDelete.id));
+      setRecordToDelete(null);
+    } catch (err: any) {
+      console.error("Failed to delete record:", err);
+      alert("Failed to delete record: " + (err.message || err));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleToggleVerify = async (record: ChampionshipAttendanceRecord) => {
-    if (!isAdmin || !record.id) return;
+    if (!record.id) return;
+    setUpdatingStatusId(record.id);
     const newStatus = record.status === "Verified" ? "Submitted" : "Verified";
     try {
       await updateDoc(doc(db, "championship_attendances", record.id), {
         status: newStatus,
       });
-      setRecords(
-        records.map((r) => (r.id === record.id ? { ...r, status: newStatus } : r))
+      setRecords((prev) =>
+        prev.map((r) => (r.id === record.id ? { ...r, status: newStatus } : r))
       );
     } catch (err: any) {
-      alert("Failed to update status: " + err.message);
+      console.error("Failed to update status:", err);
+      alert("Failed to update status: " + (err.message || err));
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -630,7 +639,8 @@ export default function ChampionshipAttendance({
                   <>
                     <button
                       onClick={() => handleToggleVerify(rec)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                      disabled={updatingStatusId === rec.id}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 ${
                         rec.status === "Verified"
                           ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
                           : "bg-emerald-600 text-white hover:bg-emerald-700"
@@ -643,7 +653,11 @@ export default function ChampionshipAttendance({
                     >
                       <CheckCircle size={14} />
                       <span>
-                        {rec.status === "Verified" ? "Unverify" : "Verify"}
+                        {updatingStatusId === rec.id
+                          ? "Updating..."
+                          : rec.status === "Verified"
+                          ? "Unverify"
+                          : "Verify"}
                       </span>
                     </button>
 
@@ -665,10 +679,8 @@ export default function ChampionshipAttendance({
 
                 {isAdmin && (
                   <button
-                    onClick={() =>
-                      rec.id && handleDeleteRecord(rec.id, rec.championshipName)
-                    }
-                    className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer"
+                    onClick={() => setRecordToDelete(rec)}
+                    className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors cursor-pointer"
                     title="Delete Record (Admin Only)"
                   >
                     <Trash2 size={16} />
@@ -1137,6 +1149,45 @@ export default function ChampionshipAttendance({
                 className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer"
               >
                 Close Roster
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {recordToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-all">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="p-3 bg-red-100 rounded-full">
+                <AlertCircle size={24} />
+              </div>
+              <h3 className="font-bold text-lg text-gray-900 m-0">Confirm Deletion</h3>
+            </div>
+
+            <p className="text-sm text-gray-600 m-0">
+              Are you sure you want to permanently delete the championship attendance record for{" "}
+              <strong className="text-gray-900">{recordToDelete.championshipName}</strong>?
+              This action cannot be undone.
+            </p>
+
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setRecordToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteRecord}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              >
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
               </button>
             </div>
           </div>

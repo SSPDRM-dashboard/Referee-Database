@@ -734,6 +734,8 @@ export default function UserProfile({
     if (isAdminView) return true;
     if (activeTab === "personal") return true;
     if (activeTab === "account") return true;
+    if (activeTab === "experience") return true;
+    if (activeTab === "poomsae_experience") return true;
     return false;
   };
 
@@ -1644,250 +1646,256 @@ export default function UserProfile({
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-center gap-2.5 shadow-xs">
                   <Lock size={16} className="text-amber-700 shrink-0" />
                   <div>
-                    <strong>Record Locked:</strong> Experience history cannot be edited in the user dashboard after submission. Only system administrators can make edits or modifications.
+                    <strong>Official Policy:</strong> You can submit new experience records anytime. Once submitted to the system, existing records are locked and cannot be edited or modified by users.
                   </div>
                 </div>
               )}
 
               <div className="bg-white border border-border rounded-lg p-5">
-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
-                <span>Kyorugi Experience</span>
-                {isEditing && isAdminView && (
+                <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+                  <span>Kyorugi Experience</span>
                   <button
+                    type="button"
                     onClick={() => {
-                      const newExp = [...(editedData.experienceHistory || [])];
+                      const current = editedData.experienceHistory || userData?.experienceHistory || [];
+                      const newExp = [...current];
                       newExp.push({
-                        id: Date.now().toString(),
+                        id: "new_" + Date.now().toString(),
                         year: "",
                         eventName: "",
                         location: "",
                         role: "",
+                        isNew: true,
                       });
                       handleInputChange("experienceHistory", newExp);
+                      if (!isEditing) setIsEditing(true);
                     }}
-                    className="text-primary text-[11px] font-bold cursor-pointer"
+                    className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
                   >
                     + ADD EXPERIENCE
                   </button>
-                )}
-              </div>
+                </div>
 
-              {(() => {
-                const canEditRows = isEditing && isAdminView;
-                return (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse mt-2">
-                      <thead>
-                        <tr>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Date
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Event Name
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Location
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Role / Responsibility
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
-                            Certificate
-                          </th>
-                          {canEditRows && isAdminView && (
-                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(canEditRows
-                          ? editedData.experienceHistory || []
-                          : [...(userData.experienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year))
-                        ).map((item: any, index: number) => (
-                          <tr key={item.id || index}>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.year}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.experienceHistory,
-                                    ];
-                                    newExp[index].year = e.target.value;
-                                    handleInputChange("experienceHistory", newExp);
-                                  }}
-                                  placeholder="Date"
-                                />
-                              ) : (
-                                item.year
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.eventName}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.experienceHistory,
-                                    ];
-                                    newExp[index].eventName = e.target.value;
-                                    handleInputChange("experienceHistory", newExp);
-                                  }}
-                                  placeholder="Tournament/Event"
-                                />
-                              ) : (
-                                item.eventName
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.location}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.experienceHistory,
-                                    ];
-                                    newExp[index].location = e.target.value;
-                                    handleInputChange("experienceHistory", newExp);
-                                  }}
-                                  placeholder="City/State"
-                                />
-                              ) : (
-                                item.location
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.role}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.experienceHistory,
-                                    ];
-                                    newExp[index].role = e.target.value;
-                                    handleInputChange("experienceHistory", newExp);
-                                  }}
-                                  placeholder="Role"
-                                />
-                              ) : (
-                                item.role
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <div className="flex items-center gap-2 flex-wrap min-h-[30px]">
-                                  {item.certificateUrl ? (
-                                    <>
+                {(() => {
+                  const displayList = isEditing
+                    ? editedData.experienceHistory || []
+                    : [...(userData.experienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year));
+
+                  return (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse mt-2">
+                        <thead>
+                          <tr>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Date
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Event Name
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Location
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Role / Responsibility
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
+                              Certificate
+                            </th>
+                            {isEditing && (
+                              <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-16"></th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayList.map((item: any, index: number) => {
+                            const isSubmittedRecord = !isAdminView && !item.isNew && (userData?.experienceHistory || []).some(
+                              (orig: any) => (orig.id && orig.id === item.id) || (orig.eventName === item.eventName && orig.year === item.year && orig.role === item.role)
+                            );
+                            const canEditThisRow = isEditing && (isAdminView || !isSubmittedRecord);
+
+                            return (
+                              <tr key={item.id || index}>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.year}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.experienceHistory || [])];
+                                        newExp[index].year = e.target.value;
+                                        handleInputChange("experienceHistory", newExp);
+                                      }}
+                                      placeholder="Date"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center gap-1.5">
+                                      <span>{item.year}</span>
+                                      {isEditing && isSubmittedRecord && (
+                                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1 py-0.5 rounded flex items-center gap-0.5 shrink-0 font-medium">
+                                          <Lock size={10} /> Locked
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.eventName}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.experienceHistory || [])];
+                                        newExp[index].eventName = e.target.value;
+                                        handleInputChange("experienceHistory", newExp);
+                                      }}
+                                      placeholder="Tournament/Event"
+                                    />
+                                  ) : (
+                                    item.eventName
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.location}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.experienceHistory || [])];
+                                        newExp[index].location = e.target.value;
+                                        handleInputChange("experienceHistory", newExp);
+                                      }}
+                                      placeholder="City/State"
+                                    />
+                                  ) : (
+                                    item.location
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.role}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.experienceHistory || [])];
+                                        newExp[index].role = e.target.value;
+                                        handleInputChange("experienceHistory", newExp);
+                                      }}
+                                      placeholder="Role"
+                                    />
+                                  ) : (
+                                    item.role
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <div className="flex items-center gap-2 flex-wrap min-h-[30px]">
+                                      {item.certificateUrl ? (
+                                        <>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedCertificateUrl(item.certificateUrl);
+                                              setSelectedCertificateTitle(item.eventName || "Kyorugi Experience Certificate");
+                                            }}
+                                            className="text-xs font-bold hover:underline flex items-center gap-1 text-primary cursor-pointer"
+                                          >
+                                            <Paperclip size={14} /> View
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (window.confirm("Are you sure you want to remove this certificate attachment?")) {
+                                                const newExp = [...(editedData.experienceHistory || [])];
+                                                delete newExp[index].certificateUrl;
+                                                handleInputChange("experienceHistory", newExp);
+                                              }
+                                            }}
+                                            className="text-red-500 hover:text-red-700 text-xs font-bold cursor-pointer whitespace-nowrap"
+                                          >
+                                            Remove
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <label className="cursor-pointer text-xs text-primary font-bold hover:underline flex items-center gap-1 whitespace-nowrap">
+                                          <Upload size={14} /> Upload
+                                          <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                  if (typeof event.target?.result === "string") {
+                                                    const newExp = [...(editedData.experienceHistory || [])];
+                                                    newExp[index].certificateUrl = event.target.result;
+                                                    handleInputChange("experienceHistory", newExp);
+                                                  }
+                                                };
+                                                reader.readAsDataURL(file);
+                                              }
+                                            }}
+                                          />
+                                        </label>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    item.certificateUrl ? (
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setSelectedCertificateUrl(item.certificateUrl);
                                           setSelectedCertificateTitle(item.eventName || "Kyorugi Experience Certificate");
                                         }}
-                                        className="text-xs text-secondary font-bold hover:underline flex items-center gap-1 text-primary cursor-pointer"
+                                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                       >
-                                        <Paperclip size={14} /> View
+                                        <Paperclip size={14} /> View Certificate
                                       </button>
-                                      {isAdminView && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            if (window.confirm("Are you sure you want to remove this certificate attachment?")) {
-                                              const newExp = [...editedData.experienceHistory];
-                                              delete newExp[index].certificateUrl;
-                                              handleInputChange("experienceHistory", newExp);
-                                            }
-                                          }}
-                                          className="text-red-500 hover:text-red-700 text-xs font-bold font-sans cursor-pointer whitespace-nowrap"
-                                        >
-                                          Remove
-                                        </button>
-                                      )}
-                                    </>
-                                  ) : (
-                                    <label className="cursor-pointer text-xs text-primary font-bold hover:underline flex items-center gap-1 whitespace-nowrap">
-                                      <Upload size={14} /> Upload
-                                      <input
-                                        type="file"
-                                        accept="image/*,application/pdf"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                              if (typeof event.target?.result === "string") {
-                                                const newExp = [...editedData.experienceHistory];
-                                                newExp[index].certificateUrl = event.target.result;
-                                                handleInputChange("experienceHistory", newExp);
-                                              }
-                                            };
-                                            reader.readAsDataURL(file);
+                                    ) : (
+                                      <span className="text-muted text-xs">No Certificate</span>
+                                    )
+                                  )}
+                                </td>
+                                {isEditing && (
+                                  <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+                                    {canEditThisRow && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (window.confirm("Are you sure you want to remove this record?")) {
+                                            const newExp = (editedData.experienceHistory || []).filter(
+                                              (_: any, i: number) => i !== index
+                                            );
+                                            handleInputChange("experienceHistory", newExp);
                                           }
                                         }}
-                                      />
-                                    </label>
-                                  )}
-                                </div>
-                              ) : (
-                                item.certificateUrl ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedCertificateUrl(item.certificateUrl);
-                                      setSelectedCertificateTitle(item.eventName || "Kyorugi Experience Certificate");
-                                    }}
-                                    className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                                  >
-                                    <Paperclip size={14} /> View Certificate
-                                  </button>
-                                ) : (
-                                  <span className="text-muted text-xs">No Certificate</span>
-                                )
-                              )}
-                            </td>
-                            {canEditRows && isAdminView && (
-                              <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
-                                <button
-                                  onClick={() => {
-                                    if (window.confirm("Are you sure you want to delete this experience record?")) {
-                                      const newExp =
-                                        editedData.experienceHistory.filter(
-                                          (_: any, i: number) => i !== index,
-                                        );
-                                      handleInputChange("experienceHistory", newExp);
-                                    }
-                                  }}
-                                  className="text-red-500 font-bold"
-                                >
-                                  X
-                                </button>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                        {(!userData.experienceHistory ||
-                          userData.experienceHistory.length === 0) &&
-                          !canEditRows && (
+                                        className="text-red-500 hover:text-red-700 font-bold cursor-pointer px-2 py-1"
+                                      >
+                                        X
+                                      </button>
+                                    )}
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })}
+                          {displayList.length === 0 && (
                             <tr>
                               <td
-                                colSpan={5}
+                                colSpan={6}
                                 className="p-4 text-center text-muted text-[13px] border-b border-border"
                               >
-                                No experience uploaded yet.
+                                No experience uploaded yet. Click "+ ADD EXPERIENCE" to add one.
                               </td>
                             </tr>
                           )}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })()}
-            </div>
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           )}
 
@@ -1897,250 +1905,256 @@ export default function UserProfile({
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-center gap-2.5 shadow-xs">
                   <Lock size={16} className="text-amber-700 shrink-0" />
                   <div>
-                    <strong>Record Locked:</strong> Experience history cannot be edited in the user dashboard after submission. Only system administrators can make edits or modifications.
+                    <strong>Official Policy:</strong> You can submit new experience records anytime. Once submitted to the system, existing records are locked and cannot be edited or modified by users.
                   </div>
                 </div>
               )}
 
               <div className="bg-white border border-border rounded-lg p-5">
-              <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
-                <span>Poomsae Experience</span>
-                {isEditing && isAdminView && (
+                <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
+                  <span>Poomsae Experience</span>
                   <button
+                    type="button"
                     onClick={() => {
-                      const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                      const current = editedData.poomsaeExperienceHistory || userData?.poomsaeExperienceHistory || [];
+                      const newExp = [...current];
                       newExp.push({
-                        id: Date.now().toString(),
+                        id: "new_" + Date.now().toString(),
                         year: "",
                         eventName: "",
                         location: "",
                         role: "",
+                        isNew: true,
                       });
                       handleInputChange("poomsaeExperienceHistory", newExp);
+                      if (!isEditing) setIsEditing(true);
                     }}
-                    className="text-primary text-[11px] font-bold cursor-pointer"
+                    className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
                   >
                     + ADD EXPERIENCE
                   </button>
-                )}
-              </div>
+                </div>
 
-              {(() => {
-                const canEditRows = isEditing && isAdminView;
-                return (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse mt-2">
-                      <thead>
-                        <tr>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Date
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Event Name
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Location
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
-                            Role / Responsibility
-                          </th>
-                          <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
-                            Certificate
-                          </th>
-                          {canEditRows && isAdminView && (
-                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border"></th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(canEditRows
-                          ? editedData.poomsaeExperienceHistory || []
-                          : [...(userData.poomsaeExperienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year))
-                        ).map((item: any, index: number) => (
-                          <tr key={item.id || index}>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.year}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.poomsaeExperienceHistory,
-                                    ];
-                                    newExp[index].year = e.target.value;
-                                    handleInputChange("poomsaeExperienceHistory", newExp);
-                                  }}
-                                  placeholder="Date"
-                                />
-                              ) : (
-                                item.year
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.eventName}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.poomsaeExperienceHistory,
-                                    ];
-                                    newExp[index].eventName = e.target.value;
-                                    handleInputChange("poomsaeExperienceHistory", newExp);
-                                  }}
-                                  placeholder="Tournament/Event"
-                                />
-                              ) : (
-                                item.eventName
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.location}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.poomsaeExperienceHistory,
-                                    ];
-                                    newExp[index].location = e.target.value;
-                                    handleInputChange("poomsaeExperienceHistory", newExp);
-                                  }}
-                                  placeholder="City/State"
-                                />
-                              ) : (
-                                item.location
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <input
-                                  className="w-full border-b border-primary focus:outline-none"
-                                  value={item.role}
-                                  onChange={(e) => {
-                                    const newExp = [
-                                      ...editedData.poomsaeExperienceHistory,
-                                    ];
-                                    newExp[index].role = e.target.value;
-                                    handleInputChange("poomsaeExperienceHistory", newExp);
-                                  }}
-                                  placeholder="Role"
-                                />
-                              ) : (
-                                item.role
-                              )}
-                            </td>
-                            <td className="p-2.5 px-2 text-[13px] border-b border-border">
-                              {canEditRows ? (
-                                <div className="flex items-center gap-2 flex-wrap min-h-[30px]">
-                                  {item.certificateUrl ? (
-                                    <>
+                {(() => {
+                  const displayList = isEditing
+                    ? editedData.poomsaeExperienceHistory || []
+                    : [...(userData.poomsaeExperienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year));
+
+                  return (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse mt-2">
+                        <thead>
+                          <tr>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Date
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Event Name
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Location
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Role / Responsibility
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-40">
+                              Certificate
+                            </th>
+                            {isEditing && (
+                              <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border w-16"></th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayList.map((item: any, index: number) => {
+                            const isSubmittedRecord = !isAdminView && !item.isNew && (userData?.poomsaeExperienceHistory || []).some(
+                              (orig: any) => (orig.id && orig.id === item.id) || (orig.eventName === item.eventName && orig.year === item.year && orig.role === item.role)
+                            );
+                            const canEditThisRow = isEditing && (isAdminView || !isSubmittedRecord);
+
+                            return (
+                              <tr key={item.id || index}>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.year}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                        newExp[index].year = e.target.value;
+                                        handleInputChange("poomsaeExperienceHistory", newExp);
+                                      }}
+                                      placeholder="Date"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center gap-1.5">
+                                      <span>{item.year}</span>
+                                      {isEditing && isSubmittedRecord && (
+                                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1 py-0.5 rounded flex items-center gap-0.5 shrink-0 font-medium">
+                                          <Lock size={10} /> Locked
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.eventName}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                        newExp[index].eventName = e.target.value;
+                                        handleInputChange("poomsaeExperienceHistory", newExp);
+                                      }}
+                                      placeholder="Tournament/Event"
+                                    />
+                                  ) : (
+                                    item.eventName
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.location}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                        newExp[index].location = e.target.value;
+                                        handleInputChange("poomsaeExperienceHistory", newExp);
+                                      }}
+                                      placeholder="City/State"
+                                    />
+                                  ) : (
+                                    item.location
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <input
+                                      className="w-full border-b border-primary focus:outline-none"
+                                      value={item.role}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                        newExp[index].role = e.target.value;
+                                        handleInputChange("poomsaeExperienceHistory", newExp);
+                                      }}
+                                      placeholder="Role"
+                                    />
+                                  ) : (
+                                    item.role
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <div className="flex items-center gap-2 flex-wrap min-h-[30px]">
+                                      {item.certificateUrl ? (
+                                        <>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedCertificateUrl(item.certificateUrl);
+                                              setSelectedCertificateTitle(item.eventName || "Poomsae Experience Certificate");
+                                            }}
+                                            className="text-xs font-bold hover:underline flex items-center gap-1 text-primary cursor-pointer"
+                                          >
+                                            <Paperclip size={14} /> View
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (window.confirm("Are you sure you want to remove this certificate attachment?")) {
+                                                const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                                delete newExp[index].certificateUrl;
+                                                handleInputChange("poomsaeExperienceHistory", newExp);
+                                              }
+                                            }}
+                                            className="text-red-500 hover:text-red-700 text-xs font-bold cursor-pointer whitespace-nowrap"
+                                          >
+                                            Remove
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <label className="cursor-pointer text-xs text-primary font-bold hover:underline flex items-center gap-1 whitespace-nowrap">
+                                          <Upload size={14} /> Upload
+                                          <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                  if (typeof event.target?.result === "string") {
+                                                    const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                                    newExp[index].certificateUrl = event.target.result;
+                                                    handleInputChange("poomsaeExperienceHistory", newExp);
+                                                  }
+                                                };
+                                                reader.readAsDataURL(file);
+                                              }
+                                            }}
+                                          />
+                                        </label>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    item.certificateUrl ? (
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setSelectedCertificateUrl(item.certificateUrl);
                                           setSelectedCertificateTitle(item.eventName || "Poomsae Experience Certificate");
                                         }}
-                                        className="text-xs text-secondary font-bold hover:underline flex items-center gap-1 text-primary cursor-pointer"
+                                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
                                       >
-                                        <Paperclip size={14} /> View
+                                        <Paperclip size={14} /> View Certificate
                                       </button>
-                                      {isAdminView && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            if (window.confirm("Are you sure you want to remove this certificate attachment?")) {
-                                              const newExp = [...editedData.poomsaeExperienceHistory];
-                                              delete newExp[index].certificateUrl;
-                                              handleInputChange("poomsaeExperienceHistory", newExp);
-                                            }
-                                          }}
-                                          className="text-red-500 hover:text-red-700 text-xs font-bold font-sans cursor-pointer whitespace-nowrap"
-                                        >
-                                          Remove
-                                        </button>
-                                      )}
-                                    </>
-                                  ) : (
-                                    <label className="cursor-pointer text-xs text-primary font-bold hover:underline flex items-center gap-1 whitespace-nowrap">
-                                      <Upload size={14} /> Upload
-                                      <input
-                                        type="file"
-                                        accept="image/*,application/pdf"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                              if (typeof event.target?.result === "string") {
-                                                const newExp = [...editedData.poomsaeExperienceHistory];
-                                                newExp[index].certificateUrl = event.target.result;
-                                                handleInputChange("poomsaeExperienceHistory", newExp);
-                                              }
-                                            };
-                                            reader.readAsDataURL(file);
+                                    ) : (
+                                      <span className="text-muted text-xs">No Certificate</span>
+                                    )
+                                  )}
+                                </td>
+                                {isEditing && (
+                                  <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
+                                    {canEditThisRow && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (window.confirm("Are you sure you want to remove this record?")) {
+                                            const newExp = (editedData.poomsaeExperienceHistory || []).filter(
+                                              (_: any, i: number) => i !== index
+                                            );
+                                            handleInputChange("poomsaeExperienceHistory", newExp);
                                           }
                                         }}
-                                      />
-                                    </label>
-                                  )}
-                                </div>
-                              ) : (
-                                item.certificateUrl ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedCertificateUrl(item.certificateUrl);
-                                      setSelectedCertificateTitle(item.eventName || "Poomsae Experience Certificate");
-                                    }}
-                                    className="text-xs text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                                  >
-                                    <Paperclip size={14} /> View Certificate
-                                  </button>
-                                ) : (
-                                  <span className="text-muted text-xs">No Certificate</span>
-                                )
-                              )}
-                            </td>
-                            {canEditRows && isAdminView && (
-                              <td className="p-2.5 px-2 text-[13px] border-b border-border text-right">
-                                <button
-                                  onClick={() => {
-                                    if (window.confirm("Are you sure you want to delete this experience record?")) {
-                                      const newExp =
-                                        editedData.poomsaeExperienceHistory.filter(
-                                          (_: any, i: number) => i !== index,
-                                        );
-                                      handleInputChange("poomsaeExperienceHistory", newExp);
-                                    }
-                                  }}
-                                  className="text-red-500 font-bold"
-                                >
-                                  X
-                                </button>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                        {(!userData.poomsaeExperienceHistory ||
-                          userData.poomsaeExperienceHistory.length === 0) &&
-                          !canEditRows && (
+                                        className="text-red-500 hover:text-red-700 font-bold cursor-pointer px-2 py-1"
+                                      >
+                                        X
+                                      </button>
+                                    )}
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })}
+                          {displayList.length === 0 && (
                             <tr>
                               <td
-                                colSpan={5}
+                                colSpan={6}
                                 className="p-4 text-center text-muted text-[13px] border-b border-border"
                               >
-                                No experience uploaded yet.
+                                No experience uploaded yet. Click "+ ADD EXPERIENCE" to add one.
                               </td>
                             </tr>
                           )}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })()}
-            </div>
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           )}
 

@@ -37,6 +37,7 @@ import {
 } from "firebase/auth";
 import Cropper from "react-easy-crop";
 import html2canvas from "html2canvas";
+import ChampionshipAttendance from "./ChampionshipAttendance";
 
 const getCroppedImg = async (
   imageSrc: string,
@@ -839,6 +840,18 @@ export default function UserProfile({
             Promotion
           </button>
 
+          <button
+            onClick={() => setActiveTab("attendance_upload")}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${
+              activeTab === "attendance_upload"
+                ? "bg-primary text-white"
+                : "text-muted hover:bg-gray-50"
+            }`}
+          >
+            <ClipboardCheck size={18} />
+            Championship Attendance
+          </button>
+
           {isAdminView && (
             <>
               <div className="text-xs font-bold text-muted uppercase tracking-wider mb-2 mt-4 px-4">
@@ -926,6 +939,7 @@ export default function UserProfile({
               {activeTab === "poomsae_experience" && "Poomsae Experience"}
               {activeTab === "annual_fee" && "Annual Fee History"}
               {activeTab === "promotion" && "Promotion History"}
+              {activeTab === "attendance_upload" && "Championship Attendance Upload"}
               {activeTab === "evaluations" && "Referee Evaluations"}
               {activeTab === "ban" && "Ban History"}
               {activeTab === "account" && "Account Settings"}
@@ -2832,12 +2846,20 @@ export default function UserProfile({
             </div>
           )}
 
+          {activeTab === "attendance_upload" && (
+            <ChampionshipAttendance
+              currentUser={userData}
+              isAdmin={isAdminView}
+            />
+          )}
+
           {activeTab !== "personal" &&
             activeTab !== "id_card" &&
             activeTab !== "experience" &&
             activeTab !== "poomsae_experience" &&
             activeTab !== "annual_fee" &&
             activeTab !== "promotion" &&
+            activeTab !== "attendance_upload" &&
             activeTab !== "evaluations" &&
             activeTab !== "ban" &&
             activeTab !== "account" && (

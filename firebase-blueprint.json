@@ -87,6 +87,31 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "fromDate", "toDate"]
+    },
+    "ChampionshipAttendance": {
+      "title": "Championship Attendance",
+      "description": "Attendance list uploaded by Referee in Charge after a championship",
+      "type": "object",
+      "properties": {
+        "championshipName": { "type": "string" },
+        "championshipType": { "type": "string", "enum": ["Kyorugi", "Poomsae", "Combined"] },
+        "championshipDate": { "type": "string" },
+        "location": { "type": "string" },
+        "refereeInChargeId": { "type": "string" },
+        "refereeInChargeName": { "type": "string" },
+        "refereeInChargeTMId": { "type": "string" },
+        "uploadedByUid": { "type": "string" },
+        "uploadedByName": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Submitted", "Verified", "Archived"] },
+        "attendanceCount": { "type": "number" },
+        "remarks": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileType": { "type": "string" },
+        "fileData": { "type": "string" },
+        "refereesList": { "type": "array" }
+      },
+      "required": ["championshipName", "championshipDate", "refereeInChargeName", "uploadedByUid"]
     }
   },
   "firestore": {
@@ -109,6 +134,10 @@
     "/users/{userId}/bans/{docId}": {
       "schema": { "$ref": "#/entities/Ban" },
       "description": "Stores ban records for a user"
+    },
+    "/championship_attendances/{docId}": {
+      "schema": { "$ref": "#/entities/ChampionshipAttendance" },
+      "description": "Stores championship attendance lists uploaded by Referees in Charge"
     }
   }
 }

@@ -45,6 +45,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /championship_attendances/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.uploadedByUid == request.auth.uid);
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.uploadedByUid == request.auth.uid);
+    }
+
     match /users/{userId} {
       // Admin can read all users. User can read their own profile.
       allow read: if isAdmin() || isOwner(userId);

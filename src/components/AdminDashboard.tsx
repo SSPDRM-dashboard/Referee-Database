@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, LogOut, X, Trash2, Plus } from 'lucide-react';
+import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
+import ChampionshipAttendance from './ChampionshipAttendance';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('referees');
@@ -247,6 +248,13 @@ export default function AdminDashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Annual Fees
           </button>
+          <button 
+            onClick={() => setActiveTab('attendance')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'attendance' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
+          >
+            <ClipboardCheck size={18} />
+            Championship Attendance
+          </button>
         </nav>
         <div className="p-4 border-t border-border">
           <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors text-red-600 hover:bg-red-50 w-full">
@@ -259,30 +267,36 @@ export default function AdminDashboard() {
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b-2 border-primary mb-6 gap-4">
-            <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">{activeTab === 'referees' ? 'Referee Directory' : 'Annual Fees Tracking'}</h1>
-            <div className="flex flex-1 w-full md:w-auto md:max-w-md gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search by name, ID or IC..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 pr-10 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm"
-                />
-                {searchQuery && (
-                   <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary"
-                   >
-                     <X size={14} />
-                   </button>
-                )}
+            <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">
+              {activeTab === 'referees' && 'Referee Directory'}
+              {activeTab === 'fees' && 'Annual Fees Tracking'}
+              {activeTab === 'attendance' && 'Championship Attendance Management'}
+            </h1>
+            {activeTab !== 'attendance' && (
+              <div className="flex flex-1 w-full md:w-auto md:max-w-md gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by name, ID or IC..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 pr-10 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm"
+                  />
+                  {searchQuery && (
+                     <button 
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary"
+                     >
+                       <X size={14} />
+                     </button>
+                  )}
+                </div>
+                <button onClick={handleOpenModal} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center shrink-0 gap-2 hover:bg-primary/90">
+                  <UserPlus size={16} />
+                  Add User
+                </button>
               </div>
-              <button onClick={handleOpenModal} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center shrink-0 gap-2 hover:bg-primary/90">
-                <UserPlus size={16} />
-                Add User
-              </button>
-            </div>
+            )}
           </header>
 
           {loading ? (
@@ -411,6 +425,11 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+          ) : activeTab === 'attendance' ? (
+            <ChampionshipAttendance
+              currentUser={{ fullName: 'ADMINISTRATOR', role: 'admin', tmMembershipId: 'ADMIN' }}
+              isAdmin={true}
+            />
           ) : null}
         </div>
       </main>

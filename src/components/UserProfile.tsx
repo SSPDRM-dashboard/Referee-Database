@@ -620,6 +620,11 @@ export default function UserProfile({
     setEditedData({ ...editedData, [field]: value });
   };
 
+  const handleCancel = () => {
+    setEditedData(userData);
+    setIsEditing(false);
+  };
+
   const handleSave = async () => {
     const userId = isAdminView ? id : auth.currentUser?.uid;
     if (!userId) return;
@@ -731,12 +736,7 @@ export default function UserProfile({
   };
 
   const isCurrentTabEditable = () => {
-    if (isAdminView) return true;
-    if (activeTab === "personal") return true;
-    if (activeTab === "account") return true;
-    if (activeTab === "experience") return true;
-    if (activeTab === "poomsae_experience") return true;
-    return false;
+    return activeTab === "personal";
   };
 
   if (loading) {
@@ -972,32 +972,34 @@ export default function UserProfile({
               {activeTab === "account" && "Account Settings"}
             </h1>
             <div className="flex gap-2 items-center">
-              {!isCurrentTabEditable() && !isAdminView && ["experience", "poomsae_experience"].includes(activeTab) && (
-                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 shadow-xs">
-                  <Lock size={14} className="text-amber-700" />
-                  Locked (Admin Edit Only)
-                </span>
+              {activeTab === "personal" && !isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-primary text-white px-4 py-2 rounded font-bold text-sm hover:bg-primary/90 transition-colors shadow-xs cursor-pointer"
+                >
+                  Edit Details
+                </button>
               )}
-              {(!isEditing) ? (
-                isCurrentTabEditable() && (
+              {isEditing && (
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-primary text-white px-4 py-2 rounded font-bold text-sm hover:bg-primary/90 transition-colors"
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={saveLoading}
+                    className="bg-gray-200 text-gray-700 px-3 py-2 rounded font-bold text-sm hover:bg-gray-300 transition-colors shadow-xs cursor-pointer"
                   >
-                    Edit Details
+                    Cancel
                   </button>
-                )
-              ) : (
-                isCurrentTabEditable() && (
                   <button
+                    type="button"
                     onClick={handleSave}
                     disabled={saveLoading}
-                    className="bg-success text-white px-4 py-2 rounded font-bold text-sm hover:opacity-90 transition-colors flex items-center gap-2"
+                    className="bg-success text-white px-4 py-2 rounded font-bold text-sm hover:opacity-90 transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
                   >
                     <Save size={16} />
                     {saveLoading ? "Saving..." : "Save Changes"}
                   </button>
-                )
+                </div>
               )}
             </div>
           </header>
@@ -1620,26 +1622,40 @@ export default function UserProfile({
               <div className="bg-white border border-border rounded-lg p-5">
                 <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                   <span>Kyorugi Experience</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const current = editedData.experienceHistory || userData?.experienceHistory || [];
-                      const newExp = [...current];
-                      newExp.push({
-                        id: "new_" + Date.now().toString(),
-                        year: "",
-                        eventName: "",
-                        location: "",
-                        role: "",
-                        isNew: true,
-                      });
-                      handleInputChange("experienceHistory", newExp);
-                      if (!isEditing) setIsEditing(true);
-                    }}
-                    className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
-                  >
-                    + ADD EXPERIENCE
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={saveLoading}
+                        className="bg-success hover:opacity-90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Save size={14} />
+                        {saveLoading ? "Saving..." : "Save Changes"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = editedData.experienceHistory || userData?.experienceHistory || [];
+                        const newExp = [...current];
+                        newExp.push({
+                          id: "new_" + Date.now().toString(),
+                          year: "",
+                          eventName: "",
+                          level: "District",
+                          location: "",
+                          role: "",
+                          isNew: true,
+                        });
+                        handleInputChange("experienceHistory", newExp);
+                        if (!isEditing) setIsEditing(true);
+                      }}
+                      className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                    >
+                      + ADD EXPERIENCE
+                    </button>
+                  </div>
                 </div>
 
                 {(() => {
@@ -1648,7 +1664,8 @@ export default function UserProfile({
                     : [...(userData.experienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year));
 
                   return (
-                    <div className="overflow-x-auto">
+                    <div>
+                      <div className="overflow-x-auto">
                       <table className="w-full border-collapse mt-2">
                         <thead>
                           <tr>
@@ -1657,6 +1674,9 @@ export default function UserProfile({
                             </th>
                             <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                               Event Name
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Level of Championship
                             </th>
                             <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                               Location
@@ -1711,6 +1731,32 @@ export default function UserProfile({
                                     />
                                   ) : (
                                     item.eventName
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <select
+                                      className="w-full border-b border-primary focus:outline-none bg-transparent py-0.5 text-[13px]"
+                                      value={item.level || ""}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.experienceHistory || [])];
+                                        newExp[index].level = e.target.value;
+                                        handleInputChange("experienceHistory", newExp);
+                                      }}
+                                    >
+                                      <option value="">Select Level</option>
+                                      <option value="District">District</option>
+                                      <option value="State">State</option>
+                                      <option value="National Level">National Level</option>
+                                    </select>
+                                  ) : (
+                                    item.level ? (
+                                      <span className="px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200 rounded-md inline-block">
+                                        {item.level}
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted text-xs">-</span>
+                                    )
                                   )}
                                 </td>
                                 <td className="p-2.5 px-2 text-[13px] border-b border-border">
@@ -1852,6 +1898,28 @@ export default function UserProfile({
                         </tbody>
                       </table>
                     </div>
+                    {isEditing && (
+                      <div className="mt-4 pt-4 border-t border-border flex justify-end items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCancel}
+                          disabled={saveLoading}
+                          className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded font-bold text-xs cursor-pointer transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSave}
+                          disabled={saveLoading}
+                          className="bg-success text-white hover:opacity-90 px-5 py-2 rounded font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                        >
+                          <Save size={14} />
+                          {saveLoading ? "Saving..." : "Save Changes"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   );
                 })()}
               </div>
@@ -1863,26 +1931,40 @@ export default function UserProfile({
               <div className="bg-white border border-border rounded-lg p-5">
                 <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                   <span>Poomsae Experience</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const current = editedData.poomsaeExperienceHistory || userData?.poomsaeExperienceHistory || [];
-                      const newExp = [...current];
-                      newExp.push({
-                        id: "new_" + Date.now().toString(),
-                        year: "",
-                        eventName: "",
-                        location: "",
-                        role: "",
-                        isNew: true,
-                      });
-                      handleInputChange("poomsaeExperienceHistory", newExp);
-                      if (!isEditing) setIsEditing(true);
-                    }}
-                    className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
-                  >
-                    + ADD EXPERIENCE
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={saveLoading}
+                        className="bg-success hover:opacity-90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Save size={14} />
+                        {saveLoading ? "Saving..." : "Save Changes"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = editedData.poomsaeExperienceHistory || userData?.poomsaeExperienceHistory || [];
+                        const newExp = [...current];
+                        newExp.push({
+                          id: "new_" + Date.now().toString(),
+                          year: "",
+                          eventName: "",
+                          level: "District",
+                          location: "",
+                          role: "",
+                          isNew: true,
+                        });
+                        handleInputChange("poomsaeExperienceHistory", newExp);
+                        if (!isEditing) setIsEditing(true);
+                      }}
+                      className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-md flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                    >
+                      + ADD EXPERIENCE
+                    </button>
+                  </div>
                 </div>
 
                 {(() => {
@@ -1891,7 +1973,8 @@ export default function UserProfile({
                     : [...(userData.poomsaeExperienceHistory || [])].sort((a, b) => parseExperienceDate(b.year) - parseExperienceDate(a.year));
 
                   return (
-                    <div className="overflow-x-auto">
+                    <div>
+                      <div className="overflow-x-auto">
                       <table className="w-full border-collapse mt-2">
                         <thead>
                           <tr>
@@ -1900,6 +1983,9 @@ export default function UserProfile({
                             </th>
                             <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                               Event Name
+                            </th>
+                            <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
+                              Level of Championship
                             </th>
                             <th className="text-left font-normal text-[11px] text-muted p-2 border-b border-border">
                               Location
@@ -1954,6 +2040,32 @@ export default function UserProfile({
                                     />
                                   ) : (
                                     item.eventName
+                                  )}
+                                </td>
+                                <td className="p-2.5 px-2 text-[13px] border-b border-border">
+                                  {canEditThisRow ? (
+                                    <select
+                                      className="w-full border-b border-primary focus:outline-none bg-transparent py-0.5 text-[13px]"
+                                      value={item.level || ""}
+                                      onChange={(e) => {
+                                        const newExp = [...(editedData.poomsaeExperienceHistory || [])];
+                                        newExp[index].level = e.target.value;
+                                        handleInputChange("poomsaeExperienceHistory", newExp);
+                                      }}
+                                    >
+                                      <option value="">Select Level</option>
+                                      <option value="District">District</option>
+                                      <option value="State">State</option>
+                                      <option value="National Level">National Level</option>
+                                    </select>
+                                  ) : (
+                                    item.level ? (
+                                      <span className="px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200 rounded-md inline-block">
+                                        {item.level}
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted text-xs">-</span>
+                                    )
                                   )}
                                 </td>
                                 <td className="p-2.5 px-2 text-[13px] border-b border-border">
@@ -2095,6 +2207,28 @@ export default function UserProfile({
                         </tbody>
                       </table>
                     </div>
+                    {isEditing && (
+                      <div className="mt-4 pt-4 border-t border-border flex justify-end items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCancel}
+                          disabled={saveLoading}
+                          className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded font-bold text-xs cursor-pointer transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSave}
+                          disabled={saveLoading}
+                          className="bg-success text-white hover:opacity-90 px-5 py-2 rounded font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                        >
+                          <Save size={14} />
+                          {saveLoading ? "Saving..." : "Save Changes"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   );
                 })()}
               </div>

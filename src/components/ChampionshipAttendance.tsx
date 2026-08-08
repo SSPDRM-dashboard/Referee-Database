@@ -47,6 +47,7 @@ export interface ChampionshipAttendanceRecord {
   id?: string;
   championshipName: string;
   championshipType: "Kyorugi" | "Poomsae" | "Combined";
+  championshipLevel?: string;
   championshipDate: string;
   location: string;
   refereeInChargeId: string;
@@ -89,6 +90,7 @@ export default function ChampionshipAttendance({
   const [championshipType, setChampionshipType] = useState<
     "Kyorugi" | "Poomsae" | "Combined"
   >("Kyorugi");
+  const [championshipLevel, setChampionshipLevel] = useState("District");
   const [championshipDate, setChampionshipDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -245,6 +247,7 @@ export default function ChampionshipAttendance({
       const newRecord: Omit<ChampionshipAttendanceRecord, "id"> = {
         championshipName: championshipName.trim(),
         championshipType,
+        championshipLevel,
         championshipDate,
         location: location.trim(),
         refereeInChargeId: currentUser?.uid || "",
@@ -377,6 +380,7 @@ export default function ChampionshipAttendance({
             id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
             year,
             eventName: record.championshipName,
+            level: record.championshipLevel || "National Level",
             location: record.location,
             role: rosterItem.role || "Referee",
           };
@@ -760,6 +764,21 @@ export default function ChampionshipAttendance({
                     <option value="Kyorugi">Kyorugi</option>
                     <option value="Poomsae">Poomsae</option>
                     <option value="Combined">Combined</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-muted uppercase tracking-wider">
+                    Level of Championship *
+                  </label>
+                  <select
+                    value={championshipLevel}
+                    onChange={(e) => setChampionshipLevel(e.target.value)}
+                    className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:border-primary font-bold bg-white"
+                  >
+                    <option value="District">District</option>
+                    <option value="State">State</option>
+                    <option value="National Level">National Level</option>
                   </select>
                 </div>
               </div>

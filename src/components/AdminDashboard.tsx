@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award } from 'lucide-react';
+import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award, Briefcase } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
 import ChampionshipAttendance from './ChampionshipAttendance';
 import AdminFeeManager from './AdminFeeManager';
 import AdminPromotionManager from './AdminPromotionManager';
+import AdminExperienceManager from './AdminExperienceManager';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('referees');
@@ -34,6 +35,7 @@ export default function AdminDashboard() {
   const [expType, setExpType] = useState('kyorugi'); // 'kyorugi' or 'poomsae'
   const [expYear, setExpYear] = useState('');
   const [expEvent, setExpEvent] = useState('');
+  const [expLevel, setExpLevel] = useState('District');
   const [expLocation, setExpLocation] = useState('');
   const [expRole, setExpRole] = useState('');
   const [isExpSaving, setIsExpSaving] = useState(false);
@@ -189,6 +191,7 @@ export default function AdminDashboard() {
     setExpType('kyorugi');
     setExpYear(new Date().getFullYear().toString());
     setExpEvent('');
+    setExpLevel('District');
     setExpLocation('');
     setExpRole('');
     setExpError('');
@@ -207,6 +210,7 @@ export default function AdminDashboard() {
         id: Date.now().toString(),
         year: expYear,
         eventName: expEvent,
+        level: expLevel,
         location: expLocation,
         role: expRole
       };
@@ -262,6 +266,13 @@ export default function AdminDashboard() {
             Promotions
           </button>
           <button 
+            onClick={() => setActiveTab('experience')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'experience' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
+          >
+            <Briefcase size={18} />
+            Experience Management
+          </button>
+          <button 
             onClick={() => setActiveTab('attendance')}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'attendance' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
           >
@@ -284,6 +295,7 @@ export default function AdminDashboard() {
               {activeTab === 'referees' && 'Referee Directory'}
               {activeTab === 'fees' && 'Annual Fees Management'}
               {activeTab === 'promotions' && 'Promotions Management'}
+              {activeTab === 'experience' && 'Experience Management'}
               {activeTab === 'attendance' && 'Championship Attendance Management'}
             </h1>
             {activeTab === 'referees' && (
@@ -390,6 +402,8 @@ export default function AdminDashboard() {
             <AdminFeeManager users={users} onUserUpdated={handleUserUpdated} />
           ) : activeTab === 'promotions' ? (
             <AdminPromotionManager users={users} onUserUpdated={handleUserUpdated} />
+          ) : activeTab === 'experience' ? (
+            <AdminExperienceManager users={users} onUserUpdated={handleUserUpdated} />
           ) : activeTab === 'attendance' ? (
             <ChampionshipAttendance
               currentUser={{ fullName: 'ADMINISTRATOR', role: 'admin', tmMembershipId: 'ADMIN' }}
@@ -626,16 +640,31 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Event Name</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. National Championship" 
-                  value={expEvent}
-                  onChange={(e) => setExpEvent(e.target.value)}
-                  className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Event Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. National Championship" 
+                    value={expEvent}
+                    onChange={(e) => setExpEvent(e.target.value)}
+                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Level of Championship</label>
+                  <select
+                    value={expLevel}
+                    onChange={(e) => setExpLevel(e.target.value)}
+                    className="w-full px-4 py-2 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    required
+                  >
+                    <option value="District">District</option>
+                    <option value="State">State</option>
+                    <option value="National Level">National Level</option>
+                  </select>
+                </div>
               </div>
               
               <div>

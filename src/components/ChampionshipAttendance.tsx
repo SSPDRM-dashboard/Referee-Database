@@ -663,13 +663,13 @@ export default function ChampionshipAttendance({
                   </>
                 )}
 
-                {(isAdmin || rec.uploadedByUid === currentUser?.uid) && (
+                {isAdmin && (
                   <button
                     onClick={() =>
                       rec.id && handleDeleteRecord(rec.id, rec.championshipName)
                     }
                     className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer"
-                    title="Delete Record"
+                    title="Delete Record (Admin Only)"
                   >
                     <Trash2 size={16} />
                   </button>

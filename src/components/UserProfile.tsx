@@ -1004,31 +1004,6 @@ export default function UserProfile({
 
           {activeTab === "personal" && (
             <div className="flex flex-col gap-6 h-full">
-              {/* Referee-In-Charge Submission Banner */}
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-primary text-white rounded-lg shrink-0">
-                    <ClipboardCheck size={22} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-primary uppercase tracking-tight m-0">
-                      Referee-In-Charge Portal
-                    </h4>
-                    <p className="text-xs text-muted m-0">
-                      Finished a championship? Submit and archive the signed attendance list to the system.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("attendance_upload")}
-                  className="bg-primary text-white hover:bg-primary/90 text-xs font-bold px-4 py-2 rounded-lg transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Upload size={14} />
-                  Upload Attendance List
-                </button>
-              </div>
-
               {/* Main Content */}
               <div className="grid grid-rows-[auto_1fr_auto] gap-5">
                 {/* Identity & Contact */}
@@ -1642,15 +1617,6 @@ export default function UserProfile({
 
           {activeTab === "experience" && (
             <div className="flex flex-col gap-5">
-              {!isAdminView && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-center gap-2.5 shadow-xs">
-                  <Lock size={16} className="text-amber-700 shrink-0" />
-                  <div>
-                    <strong>Official Policy:</strong> You can submit new experience records anytime. Once submitted to the system, existing records are locked and cannot be edited or modified by users.
-                  </div>
-                </div>
-              )}
-
               <div className="bg-white border border-border rounded-lg p-5">
                 <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                   <span>Kyorugi Experience</span>
@@ -1728,14 +1694,7 @@ export default function UserProfile({
                                       placeholder="Date"
                                     />
                                   ) : (
-                                    <div className="flex items-center gap-1.5">
-                                      <span>{item.year}</span>
-                                      {isEditing && isSubmittedRecord && (
-                                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1 py-0.5 rounded flex items-center gap-0.5 shrink-0 font-medium">
-                                          <Lock size={10} /> Locked
-                                        </span>
-                                      )}
-                                    </div>
+                                    item.year
                                   )}
                                 </td>
                                 <td className="p-2.5 px-2 text-[13px] border-b border-border">
@@ -1901,15 +1860,6 @@ export default function UserProfile({
 
           {activeTab === "poomsae_experience" && (
             <div className="flex flex-col gap-5">
-              {!isAdminView && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-center gap-2.5 shadow-xs">
-                  <Lock size={16} className="text-amber-700 shrink-0" />
-                  <div>
-                    <strong>Official Policy:</strong> You can submit new experience records anytime. Once submitted to the system, existing records are locked and cannot be edited or modified by users.
-                  </div>
-                </div>
-              )}
-
               <div className="bg-white border border-border rounded-lg p-5">
                 <div className="text-[12px] uppercase font-bold text-muted mb-4 flex items-center justify-between">
                   <span>Poomsae Experience</span>
@@ -1987,14 +1937,7 @@ export default function UserProfile({
                                       placeholder="Date"
                                     />
                                   ) : (
-                                    <div className="flex items-center gap-1.5">
-                                      <span>{item.year}</span>
-                                      {isEditing && isSubmittedRecord && (
-                                        <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1 py-0.5 rounded flex items-center gap-0.5 shrink-0 font-medium">
-                                          <Lock size={10} /> Locked
-                                        </span>
-                                      )}
-                                    </div>
+                                    item.year
                                   )}
                                 </td>
                                 <td className="p-2.5 px-2 text-[13px] border-b border-border">

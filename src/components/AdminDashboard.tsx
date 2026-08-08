@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck } from 'lucide-react';
+import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
 import ChampionshipAttendance from './ChampionshipAttendance';
+import AdminFeeManager from './AdminFeeManager';
+import AdminPromotionManager from './AdminPromotionManager';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('referees');
@@ -52,6 +54,10 @@ export default function AdminDashboard() {
 
     fetchUsers();
   }, []);
+
+  const handleUserUpdated = (updatedUser: any) => {
+    setUsers(prev => prev.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u));
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -249,6 +255,13 @@ export default function AdminDashboard() {
             Annual Fees
           </button>
           <button 
+            onClick={() => setActiveTab('promotions')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'promotions' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
+          >
+            <Award size={18} />
+            Promotions
+          </button>
+          <button 
             onClick={() => setActiveTab('attendance')}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm transition-colors ${activeTab === 'attendance' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'}`}
           >
@@ -269,10 +282,11 @@ export default function AdminDashboard() {
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b-2 border-primary mb-6 gap-4">
             <h1 className="text-2xl font-bold text-primary uppercase tracking-tight">
               {activeTab === 'referees' && 'Referee Directory'}
-              {activeTab === 'fees' && 'Annual Fees Tracking'}
+              {activeTab === 'fees' && 'Annual Fees Management'}
+              {activeTab === 'promotions' && 'Promotions Management'}
               {activeTab === 'attendance' && 'Championship Attendance Management'}
             </h1>
-            {activeTab !== 'attendance' && (
+            {activeTab === 'referees' && (
               <div className="flex flex-1 w-full md:w-auto md:max-w-md gap-2">
                 <div className="relative flex-1">
                   <input
@@ -373,58 +387,9 @@ export default function AdminDashboard() {
               </table>
             </div>
           ) : activeTab === 'fees' ? (
-            <div className="bg-white border border-border rounded-lg overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-border">
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Name</th>
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Referee ID</th>
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Last Paid Year</th>
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Status</th>
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.filter(user => user.role !== 'admin').map(user => {
-                    const fees = user.annualFeeHistory || [];
-                    const maxYear = fees.length ? Math.max(...fees.map((f: any) => parseInt(f.year)).filter((y: number) => !isNaN(y))) : 0;
-                    const lastYearPaid = maxYear > 0 ? maxYear.toString() : 'N/A';
-                    const currentYear = new Date().getFullYear();
-                    const isPaidThisYear = maxYear === currentYear;
-                    
-                    return (
-                        <tr key={user.id} className="border-b border-border hover:bg-gray-50">
-                          <td className="p-4 font-semibold text-sm">{user.fullName || 'N/A'}</td>
-                          <td className="p-4 text-sm text-muted whitespace-nowrap">
-                            {user.tmMembershipId ? `${user.tmMembershipId}-K${user.kyorugiRefereeLevel || 'IR'}-P${user.poomsaeRefereeLevel || 'IR'}-${user.refereeSerialNumber || '0001'}` : 'N/A'}
-                          </td>
-                          <td className="p-4 text-sm font-semibold">{lastYearPaid}</td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${isPaidThisYear ? 'bg-[#C6F6D5] text-[#22543D]' : 'bg-[#FED7D7] text-[#9B2C2C]'}`}>
-                              {isPaidThisYear ? 'Paid' : 'Due'}
-                            </span>
-                          </td>
-                          <td className="p-4 flex items-center gap-4">
-                            <button 
-                              onClick={() => navigate(`/admin/user/${user.id}?tab=annual_fee`)}
-                              className="text-primary text-sm font-bold hover:underline"
-                            >
-                              View & Manage
-                            </button>
-                          </td>
-                        </tr>
-                    );
-                  })}
-                  {filteredUsers.filter(user => user.role !== 'admin').length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-muted">
-                        No results match your search.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <AdminFeeManager users={users} onUserUpdated={handleUserUpdated} />
+          ) : activeTab === 'promotions' ? (
+            <AdminPromotionManager users={users} onUserUpdated={handleUserUpdated} />
           ) : activeTab === 'attendance' ? (
             <ChampionshipAttendance
               currentUser={{ fullName: 'ADMINISTRATOR', role: 'admin', tmMembershipId: 'ADMIN' }}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, getDoc, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award, Briefcase, ArrowDownAZ } from 'lucide-react';
+import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award, Briefcase, ArrowDownAZ, ArrowUpAZ, ArrowUpDown, ArrowDown01, ArrowUp01, SlidersHorizontal } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
 import ChampionshipAttendance from './ChampionshipAttendance';
 import AdminFeeManager from './AdminFeeManager';
@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('referees');
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'login_asc' | 'login_desc'>('name_asc');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -212,9 +213,21 @@ export default function AdminDashboard() {
       );
     })
     .sort((a, b) => {
-      const nameA = (a.fullName || '').trim().toLowerCase();
-      const nameB = (b.fullName || '').trim().toLowerCase();
-      return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+      const nameA = (a.fullName || '').trim();
+      const nameB = (b.fullName || '').trim();
+      const idA = (a.tmMembershipId || '').trim();
+      const idB = (b.tmMembershipId || '').trim();
+
+      if (sortBy === 'name_asc') {
+        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base', numeric: true });
+      } else if (sortBy === 'name_desc') {
+        return nameB.localeCompare(nameA, undefined, { sensitivity: 'base', numeric: true });
+      } else if (sortBy === 'login_asc') {
+        return idA.localeCompare(idB, undefined, { sensitivity: 'base', numeric: true });
+      } else if (sortBy === 'login_desc') {
+        return idB.localeCompare(idA, undefined, { sensitivity: 'base', numeric: true });
+      }
+      return 0;
     });
 
   const handleOpenExpModal = (user: any) => {
@@ -330,14 +343,14 @@ export default function AdminDashboard() {
               {activeTab === 'attendance' && 'Championship Attendance Management'}
             </h1>
             {activeTab === 'referees' && (
-              <div className="flex flex-1 w-full md:w-auto md:max-w-md gap-2">
-                <div className="relative flex-1">
+              <div className="flex flex-1 w-full md:w-auto md:max-w-2xl gap-2.5 flex-wrap sm:flex-nowrap items-center justify-end">
+                <div className="relative flex-1 min-w-[180px]">
                   <input
                     type="text"
                     placeholder="Search by name, ID or IC..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pr-10 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm"
+                    className="w-full px-3.5 py-2 pr-10 rounded border border-border focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-sm"
                   />
                   {searchQuery && (
                      <button 
@@ -348,7 +361,27 @@ export default function AdminDashboard() {
                      </button>
                   )}
                 </div>
-                <button onClick={handleOpenModal} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center shrink-0 gap-2 hover:bg-primary/90">
+
+                {/* Filter / Sort Selection */}
+                <div className="flex items-center gap-1.5 shrink-0 bg-white border border-border rounded px-2.5 py-1.5 shadow-2xs">
+                  <SlidersHorizontal size={14} className="text-muted shrink-0" />
+                  <label htmlFor="referee-sort-select" className="text-xs font-bold text-muted uppercase shrink-0">
+                    Arrange:
+                  </label>
+                  <select
+                    id="referee-sort-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-transparent text-xs font-bold text-primary focus:outline-none cursor-pointer pr-1"
+                  >
+                    <option value="name_asc">Name (A → Z)</option>
+                    <option value="name_desc">Name (Z → A)</option>
+                    <option value="login_asc">Login ID (A → Z / 0-9)</option>
+                    <option value="login_desc">Login ID (Z → A / 9-0)</option>
+                  </select>
+                </div>
+
+                <button onClick={handleOpenModal} className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center shrink-0 gap-2 hover:bg-primary/90 shadow-2xs">
                   <UserPlus size={16} />
                   Add User
                 </button>
@@ -363,16 +396,54 @@ export default function AdminDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-border">
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">
-                      <div className="flex items-center gap-1 text-primary">
+                    <th 
+                      onClick={() => setSortBy(sortBy === 'name_asc' ? 'name_desc' : 'name_asc')}
+                      className="p-4 text-xs font-bold text-muted uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      title="Click to toggle Name sort (A-Z / Z-A)"
+                    >
+                      <div className="flex items-center gap-1.5 text-primary">
                         <span>Name</span>
-                        <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold">
-                          <ArrowDownAZ size={12} />
-                          A-Z
-                        </span>
+                        {sortBy === 'name_asc' && (
+                          <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold">
+                            <ArrowDownAZ size={12} />
+                            A-Z
+                          </span>
+                        )}
+                        {sortBy === 'name_desc' && (
+                          <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold">
+                            <ArrowUpAZ size={12} />
+                            Z-A
+                          </span>
+                        )}
+                        {sortBy !== 'name_asc' && sortBy !== 'name_desc' && (
+                          <ArrowUpDown size={12} className="text-muted/60" />
+                        )}
                       </div>
                     </th>
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Login ID</th>
+                    <th 
+                      onClick={() => setSortBy(sortBy === 'login_asc' ? 'login_desc' : 'login_asc')}
+                      className="p-4 text-xs font-bold text-muted uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                      title="Click to toggle Login ID sort (Ascending / Descending)"
+                    >
+                      <div className="flex items-center gap-1.5 text-primary">
+                        <span>Login ID</span>
+                        {sortBy === 'login_asc' && (
+                          <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold">
+                            <ArrowDown01 size={12} />
+                            Asc
+                          </span>
+                        )}
+                        {sortBy === 'login_desc' && (
+                          <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold">
+                            <ArrowUp01 size={12} />
+                            Desc
+                          </span>
+                        )}
+                        {sortBy !== 'login_asc' && sortBy !== 'login_desc' && (
+                          <ArrowUpDown size={12} className="text-muted/60" />
+                        )}
+                      </div>
+                    </th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Password</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Referee ID</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">IC Number</th>

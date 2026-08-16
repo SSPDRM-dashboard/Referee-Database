@@ -33,15 +33,20 @@ export default function AdminExperienceManager({ users, onUserUpdated }: AdminEx
   const [filterLevel, setFilterLevel] = useState<string>('ALL');
   const [filterType, setFilterType] = useState<string>('ALL');
 
-  const refereeUsers = users.filter((u) => u.role !== 'admin');
-  const filteredUsers = refereeUsers.filter((u) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    const name = (u.fullName || '').toLowerCase();
-    const ic = (u.icNumber || '').toLowerCase();
-    const tm = (u.tmMembershipId || '').toLowerCase();
-    return name.includes(q) || ic.includes(q) || tm.includes(q);
-  });
+  const refereeUsers = users
+    .filter((u) => u.role !== 'admin')
+    .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', undefined, { sensitivity: 'base' }));
+
+  const filteredUsers = refereeUsers
+    .filter((u) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      const name = (u.fullName || '').toLowerCase();
+      const ic = (u.icNumber || '').toLowerCase();
+      const tm = (u.tmMembershipId || '').toLowerCase();
+      return name.includes(q) || ic.includes(q) || tm.includes(q);
+    })
+    .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', undefined, { sensitivity: 'base' }));
 
   const handleSelectUser = (user: any) => {
     setSelectedUser(user);

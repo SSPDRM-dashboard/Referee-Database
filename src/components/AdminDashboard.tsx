@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, getDoc, setDoc, doc, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth, secondaryAuth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award, Briefcase } from 'lucide-react';
+import { UserPlus, Users, LogOut, X, Trash2, Plus, ClipboardCheck, Award, Briefcase, ArrowDownAZ } from 'lucide-react';
 import { signOut, createUserWithEmailAndPassword, signOut as signOutSecondary } from 'firebase/auth';
 import ChampionshipAttendance from './ChampionshipAttendance';
 import AdminFeeManager from './AdminFeeManager';
@@ -119,6 +119,31 @@ export default function AdminDashboard() {
       }
 
       const cleanTMId = newTMId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+      // Check if TM ID is duplicate among currently loaded users
+      const isDuplicateInState = users.some(u => {
+        const existingCleanTMId = (u.tmMembershipId || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        return existingCleanTMId === cleanTMId;
+      });
+
+      if (isDuplicateInState) {
+        setAddError(`Duplicate TM ID: "${newTMId.trim()}" is already registered. Duplicate TM numbers are not allowed.`);
+        setIsAdding(false);
+        return;
+      }
+
+      // Also check Firestore login_mappings to prevent duplicate registration
+      try {
+        const mappingDoc = await getDoc(doc(db, 'login_mappings', cleanTMId));
+        if (mappingDoc.exists()) {
+          setAddError(`Duplicate TM ID: "${newTMId.trim()}" already exists in the registry. Duplicate TM numbers are not allowed.`);
+          setIsAdding(false);
+          return;
+        }
+      } catch (checkErr) {
+        console.warn("Could not check login_mappings doc:", checkErr);
+      }
+
       const dummyEmail = `${cleanTMId}@tmreferee.local`;
 
       // Create user in Firebase Auth using secondary app to avoid logging out the admin
@@ -131,9 +156,9 @@ export default function AdminDashboard() {
       const newUser = {
         uid: newUid,
         email: dummyEmail,
-        icNumber: newRole === 'admin' ? '' : newIC,
-        tmMembershipId: newTMId,
-        fullName: newName,
+        icNumber: newRole === 'admin' ? '' : newIC.trim(),
+        tmMembershipId: newTMId.trim(),
+        fullName: newName.trim().toUpperCase(),
         role: newRole,
         isActive: true,
         createdAt: new Date().toISOString(),
@@ -141,7 +166,7 @@ export default function AdminDashboard() {
         kukkiwonDan: '',
         kyorugiRefereeLevel: newRole === 'admin' ? 'NIL' : newKyorugiLevel,
         poomsaeRefereeLevel: newRole === 'admin' ? 'NIL' : newPoomsaeLevel,
-        refereeSerialNumber: newRole === 'admin' ? '' : newSerialNumber,
+        refereeSerialNumber: newRole === 'admin' ? '' : newSerialNumber.trim(),
         licenseExpiry: '',
         address: '',
         premierClub: '',
@@ -164,7 +189,7 @@ export default function AdminDashboard() {
       if (error.code === 'auth/operation-not-allowed') {
         setAddError("Email/Password sign-in is not enabled in Firebase Console. Please enable it.");
       } else if (error.code === 'auth/email-already-in-use') {
-        setAddError("A user with this username/login ID already exists.");
+        setAddError(`Duplicate TM ID: "${newTMId.trim()}" is already registered. Duplicate TM numbers are not allowed.`);
       } else {
         setAddError("Failed to create user: " + error.message);
       }
@@ -173,18 +198,24 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
-    const searchLower = searchQuery.toLowerCase();
-    const fullName = (user.fullName || '').toLowerCase();
-    const icNumber = (user.icNumber || '').toLowerCase();
-    const tmId = (user.tmMembershipId || '').toLowerCase();
+  const filteredUsers = users
+    .filter((user) => {
+      const searchLower = searchQuery.toLowerCase();
+      const fullName = (user.fullName || '').toLowerCase();
+      const icNumber = (user.icNumber || '').toLowerCase();
+      const tmId = (user.tmMembershipId || '').toLowerCase();
 
-    return (
-      fullName.includes(searchLower) ||
-      icNumber.includes(searchLower) ||
-      tmId.includes(searchLower)
-    );
-  });
+      return (
+        fullName.includes(searchLower) ||
+        icNumber.includes(searchLower) ||
+        tmId.includes(searchLower)
+      );
+    })
+    .sort((a, b) => {
+      const nameA = (a.fullName || '').trim().toLowerCase();
+      const nameB = (b.fullName || '').trim().toLowerCase();
+      return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    });
 
   const handleOpenExpModal = (user: any) => {
     setSelectedUser(user);
@@ -332,7 +363,15 @@ export default function AdminDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-border">
-                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Name</th>
+                    <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">
+                      <div className="flex items-center gap-1 text-primary">
+                        <span>Name</span>
+                        <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold">
+                          <ArrowDownAZ size={12} />
+                          A-Z
+                        </span>
+                      </div>
+                    </th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Login ID</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Password</th>
                     <th className="p-4 text-xs font-bold text-muted uppercase tracking-wider">Referee ID</th>

@@ -645,6 +645,24 @@ export default function UserProfile({
         poomsaeExperienceHistory: sortedPoomsaeExp,
       };
 
+      // Check for duplicate TM ID if changed
+      if (
+        isAdminView &&
+        editedData.tmMembershipId &&
+        editedData.tmMembershipId.trim().toLowerCase() !== (userData.tmMembershipId || "").trim().toLowerCase()
+      ) {
+        const newClean = editedData.tmMembershipId
+          .replace(/[^a-zA-Z0-9]/g, "")
+          .toLowerCase();
+
+        const mappingDoc = await getDoc(doc(db, "login_mappings", newClean));
+        if (mappingDoc.exists() && mappingDoc.data().uid !== userId) {
+          alert(`Duplicate TM ID: "${editedData.tmMembershipId}" is already assigned to another referee. Duplicate TM numbers are not allowed.`);
+          setSaveLoading(false);
+          return;
+        }
+      }
+
       await updateDoc(doc(db, "users", userId), finalDataToSave);
 
       // Update mapping if TM ID changed
